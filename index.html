@@ -1,0 +1,65 @@
+<!DOCTYPE html>
+<html lang="ru">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>Семейный список продуктов</title>
+  <link rel="stylesheet" href="style.css" />
+</head>
+<body>
+  <div class="app">
+    <header>
+      <div class="header-content">
+        <h1>🛒 Семейный список</h1>
+        <div class="stats">
+          <span id="stats-text">0 из 0 куплено</span>
+        </div>
+      </div>
+      <div class="progress-bar">
+        <div class="progress-fill" id="progress-fill"></div>
+      </div>
+    </header>
+
+    <main>
+      <div class="add-section">
+        <div class="add-form">
+          <input
+            type="text"
+            id="item-input"
+            placeholder="Добавить продукт..."
+            autocomplete="off"
+          />
+          <select id="category-select">
+            <option value="🥬 Овощи и фрукты">🥬 Овощи и фрукты</option>
+            <option value="🥩 Мясо и рыба">🥩 Мясо и рыба</option>
+            <option value="🥛 Молочное">🥛 Молочное</option>
+            <option value="🍞 Хлеб и выпечка">🍞 Хлеб и выпечка</option>
+            <option value="🧴 Бытовая химия">🧴 Бытовая химия</option>
+            <option value="🥫 Бакалея">🥫 Бакалея</option>
+            <option value="🍬 Сладости">🍬 Сладости</option>
+            <option value="🧃 Напитки">🧃 Напитки</option>
+            <option value="❓ Другое">❓ Другое</option>
+          </select>
+          <input type="number" id="qty-input" placeholder="Кол-во" min="1" value="1" />
+          <button id="add-btn" onclick="addItem()">Добавить</button>
+        </div>
+      </div>
+
+      <div class="filters">
+        <button class="filter-btn active" onclick="setFilter('all', this)">Все</button>
+        <button class="filter-btn" onclick="setFilter('active', this)">Не куплено</button>
+        <button class="filter-btn" onclick="setFilter('done', this)">Куплено</button>
+      </div>
+
+      <div id="list-container"></div>
+
+      <div class="footer-actions">
+        <button class="danger-btn" onclick="clearDone()">Удалить купленные</button>
+        <button class="danger-btn" onclick="clearAll()">Очистить всё</button>
+      </div>
+    </main>
+  </div>
+
+  <script src="app.js"></script>
+</body>
+</html>
