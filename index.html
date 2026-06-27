@@ -81,12 +81,15 @@
 
     <main>
       <div class="add-section">
+        <select id="category-select" onchange="updatePopular()"></select>
+        <select id="popular-select" onchange="pickPopular()">
+          <option value="">— выбрать из списка —</option>
+        </select>
         <div class="input-wrap">
-          <input type="text" id="item-input" placeholder="Добавить продукт..." autocomplete="off" />
+          <input type="text" id="item-input" placeholder="Или ввести вручную..." autocomplete="off" />
           <div id="autocomplete-list" class="autocomplete-list hidden"></div>
         </div>
         <div class="add-row2">
-          <select id="category-select"></select>
           <input type="number" id="qty-input" placeholder="Кол-во" min="1" value="1" />
           <select id="unit-select"></select>
           <button id="add-btn" onclick="addItem()">+ Добавить</button>

@@ -389,7 +389,7 @@ main {
 
 .add-row2 {
   display: grid;
-  grid-template-columns: 1fr 70px 80px auto;
+  grid-template-columns: 70px 90px 1fr;
   gap: 8px;
 }
 
@@ -651,13 +651,7 @@ input.error {
 /* ── Мобильные ─────────────────────────────────────────────────────── */
 @media (max-width: 520px) {
   h1 { font-size: 1.2rem; }
-  .add-row2 {
-    grid-template-columns: 1fr 1fr;
-    gap: 8px;
-  }
-  #category-select { grid-column: 1 / -1; }
-  #qty-input  { width: 100%; }
-  #unit-select { width: 100%; }
+  .add-row2 { grid-template-columns: 60px 80px 1fr; }
   #add-btn { grid-column: 1 / -1; }
   .drag-handle { display: none; }
 }

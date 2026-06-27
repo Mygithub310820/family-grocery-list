@@ -11,11 +11,11 @@ const FIREBASE_CONFIG = {
 
 // ── Пользователи с паролями ────────────────────────────────────────────────
 const USERS = [
-  { id: 1, name: 'Papa',   emoji: '👨', role: 'admin', password: 'Asdfg%6'   },
-  { id: 2, name: 'Mama',   emoji: '👩', role: 'admin', password: 'SuluQyz18' },
-  { id: 3, name: 'Azheka', emoji: '👦', role: 'user',  password: 'A1939'     },
-  { id: 4, name: 'Amina',  emoji: '👧', role: 'user',  password: 'Kolbasa'   },
-  { id: 5, name: 'Dauka',  emoji: '👦', role: 'user',  password: 'NaglMurs'  },
+  { id: 1, name: 'Papa',   emoji: '👨', role: 'admin', password: 'Asdfg%6',   seeAll: true  },
+  { id: 2, name: 'Mama',   emoji: '👩', role: 'admin', password: 'SuluQyz18', seeAll: true  },
+  { id: 3, name: 'Azheka', emoji: '👧', role: 'user',  password: 'A1939',     seeAll: false },
+  { id: 4, name: 'Amina',  emoji: '👧', role: 'user',  password: 'Kolbasa',   seeAll: true  },
+  { id: 5, name: 'Dauka',  emoji: '👦', role: 'user',  password: 'NaglMurs',  seeAll: true  },
 ];
 
 const CATEGORIES = [
@@ -24,6 +24,18 @@ const CATEGORIES = [
   '🍬 Сладости', '🧃 Напитки', '❓ Другое',
 ];
 const UNITS = ['шт.', 'кг', 'г', 'л', 'мл', 'упак.', 'пач.'];
+
+const POPULAR = {
+  '🥬 Овощи и фрукты': ['Картофель', 'Помидоры', 'Огурцы', 'Морковь', 'Яблоки', 'Бананы'],
+  '🥩 Мясо и рыба':    ['Курица', 'Говядина', 'Свинина', 'Фарш', 'Лосось', 'Минтай'],
+  '🥛 Молочное':       ['Молоко', 'Кефир', 'Сметана', 'Творог', 'Сыр', 'Масло сливочное'],
+  '🍞 Хлеб и выпечка': ['Хлеб белый', 'Хлеб чёрный', 'Батон', 'Лаваш', 'Булочки', 'Багет'],
+  '🧴 Бытовая химия':  ['Порошок стиральный', 'Средство для посуды', 'Шампунь', 'Зубная паста', 'Туалетная бумага', 'Гель для душа'],
+  '🥫 Бакалея':        ['Рис', 'Гречка', 'Макароны', 'Сахар', 'Подсолнечное масло', 'Мука'],
+  '🍬 Сладости':       ['Шоколад', 'Конфеты', 'Печенье', 'Вафли', 'Зефир', 'Мармелад'],
+  '🧃 Напитки':        ['Вода питьевая', 'Сок', 'Чай', 'Кофе', 'Газировка', 'Компот'],
+  '❓ Другое':         [],
+};
 
 // ── Состояние ──────────────────────────────────────────────────────────────
 let items         = [];           // синхронизируется с Firebase
@@ -83,6 +95,7 @@ function populateSelects() {
   document.getElementById('edit-category').innerHTML   = catOpts;
   document.getElementById('unit-select').innerHTML     = unitOpts;
   document.getElementById('edit-unit').innerHTML       = unitOpts;
+  updatePopular();
 }
 
 // ── Экран входа ────────────────────────────────────────────────────────────
@@ -157,8 +170,10 @@ function showApp() {
   // render() вызовется автоматически через dbRef.on('value')
 }
 
-function me()      { return USERS.find(u => u.id === currentUserId); }
-function isAdmin() { const u = me(); return u && u.role === 'admin'; }
+function me()        { return USERS.find(u => u.id === currentUserId); }
+function isAdmin()   { const u = me(); return u && u.role === 'admin'; }
+function canSeeAll() { const u = me(); return u && (u.role === 'admin' || u.seeAll); }
+function canManage(item) { return isAdmin() || item.addedBy === currentUserId; }
 
 function updateUserDisplay() {
   const u = me();
@@ -173,6 +188,26 @@ function toggleDark() {
   document.body.classList.toggle('dark', darkMode);
   localStorage.setItem('grocery-dark', String(darkMode));
   document.querySelector('.dark-toggle').textContent = darkMode ? '☀️' : '🌙';
+}
+
+// ── Популярные товары ──────────────────────────────────────────────────────
+function updatePopular() {
+  const cat     = document.getElementById('category-select').value;
+  const popular = POPULAR[cat] || [];
+  const sel     = document.getElementById('popular-select');
+  sel.innerHTML = `<option value="">— выбрать из списка —</option>`
+    + popular.map(p => `<option value="${esc(p)}">${p}</option>`).join('');
+  // Сбрасываем текстовое поле
+  document.getElementById('item-input').value = '';
+  hideAutocomplete();
+}
+
+function pickPopular() {
+  const val = document.getElementById('popular-select').value;
+  if (val) {
+    document.getElementById('item-input').value = val;
+    hideAutocomplete();
+  }
 }
 
 // ── CRUD продуктов ─────────────────────────────────────────────────────────
@@ -215,7 +250,7 @@ function toggleItem(id) {
 function deleteItem(id) {
   const item = items.find(i => i.id === id);
   if (!item) return;
-  if (!isAdmin() && item.addedBy !== currentUserId) {
+  if (!canManage(item)) {
     alert('Вы можете удалять только свои продукты');
     return;
   }
@@ -240,7 +275,7 @@ function clearAll() {
 function openEdit(id) {
   const item = items.find(i => i.id === id);
   if (!item) return;
-  if (!isAdmin() && item.addedBy !== currentUserId) {
+  if (!canManage(item)) {
     alert('Вы можете редактировать только свои продукты');
     return;
   }
@@ -361,10 +396,11 @@ function render() {
   statsText.textContent    = `${done} из ${total} куплено`;
   progressFill.style.width = total ? `${(done / total) * 100}%` : '0%';
 
-  // Обычные пользователи видят только свои продукты
-  let filtered = isAdmin() ? items : items.filter(i => i.addedBy === currentUserId);
-  if (currentFilter === 'active') filtered = filtered.filter(i => !i.done);
-  if (currentFilter === 'done')   filtered = filtered.filter(i => i.done);
+  // Azheka видит только свои; остальные — все
+  let visible  = canSeeAll() ? items : items.filter(i => i.addedBy === currentUserId);
+  let filtered = visible;
+  if (currentFilter === 'active') filtered = visible.filter(i => !i.done);
+  if (currentFilter === 'done')   filtered = visible.filter(i => i.done);
 
   if (!filtered.length) {
     const msgs = {
@@ -388,7 +424,7 @@ function render() {
       <div class="category-header">${cat}</div>
       ${catItems.map(item => {
         const author  = USERS.find(u => u.id === item.addedBy);
-        const canEdit = isAdmin() || item.addedBy === currentUserId;
+        const canEdit = canManage(item);
         return `
           <div class="item ${item.done ? 'done' : ''}" data-id="${item.id}" draggable="true">
             <div class="drag-handle" title="Перетащить">⠿</div>
