@@ -8,35 +8,33 @@
 </head>
 <body>
 
-  <!-- Экран выбора пользователя -->
+  <!-- Экран входа -->
   <div id="login-screen" class="login-screen hidden">
     <div class="login-card">
       <div class="login-logo">🛒</div>
-      <h2 class="login-title">Кто идёт за покупками?</h2>
-      <div id="user-list" class="user-list"></div>
-      <button class="login-manage-btn" onclick="openManageUsers()">⚙️ Управление пользователями</button>
-    </div>
-  </div>
+      <h2 class="login-title">Семейный список</h2>
 
-  <!-- Модалка управления пользователями -->
-  <div id="manage-modal" class="modal-overlay hidden">
-    <div class="modal">
-      <div class="modal-header">
-        <h2>Пользователи</h2>
-        <button class="modal-close" onclick="closeManageUsers()">✕</button>
+      <!-- Шаг 1: выбор пользователя -->
+      <div id="login-step1">
+        <p class="login-sub">Выберите пользователя</p>
+        <div id="user-list" class="user-list"></div>
       </div>
-      <div id="users-list-manage" class="users-list-manage"></div>
-      <div class="add-user-form">
-        <input type="text" id="new-user-name" placeholder="Имя" maxlength="20" />
-        <select id="new-user-emoji">
-          <option>👨</option><option>👩</option><option>👦</option>
-          <option>👧</option><option>👴</option><option>👵</option>
-        </select>
-        <select id="new-user-role">
-          <option value="user">Пользователь</option>
-          <option value="admin">Администратор</option>
-        </select>
-        <button class="add-user-btn" onclick="addUser()">Добавить</button>
+
+      <!-- Шаг 2: ввод пароля -->
+      <div id="login-step2" class="hidden">
+        <div class="selected-user-info">
+          <span id="sel-emoji"></span>
+          <span id="sel-name"></span>
+        </div>
+        <div class="password-wrap">
+          <input type="password" id="password-input" placeholder="Введите пароль..." />
+          <button class="eye-btn" onclick="togglePwdVisibility()" title="Показать/скрыть">👁</button>
+        </div>
+        <div id="login-error" class="login-error hidden">Неверный пароль ❌</div>
+        <div class="login-step2-btns">
+          <button class="back-btn" onclick="backToUsers()">← Назад</button>
+          <button class="login-btn" onclick="tryLogin()">Войти →</button>
+        </div>
       </div>
     </div>
   </div>
@@ -67,7 +65,7 @@
         <h1>🛒 Семейный список</h1>
         <div class="header-right">
           <button class="dark-toggle" onclick="toggleDark()" title="Сменить тему">🌙</button>
-          <div class="current-user-chip" onclick="logout()" title="Сменить пользователя">
+          <div class="current-user-chip" onclick="logout()" title="Выйти">
             <span id="current-user-display"></span>
             <span class="logout-hint">↩</span>
           </div>

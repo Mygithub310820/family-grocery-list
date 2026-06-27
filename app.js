@@ -1,41 +1,41 @@
+// ── Пользователи с паролями ────────────────────────────────────────────────
+const USERS = [
+  { id: 1, name: 'Papa',   emoji: '👨', role: 'admin', password: 'Asdfg%6'   },
+  { id: 2, name: 'Mama',   emoji: '👩', role: 'admin', password: 'SuluQyz18' },
+  { id: 3, name: 'Azheka', emoji: '👦', role: 'user',  password: 'A1939'     },
+  { id: 4, name: 'Amina',  emoji: '👧', role: 'user',  password: 'Kolbasa'   },
+  { id: 5, name: 'Dauka',  emoji: '👦', role: 'user',  password: 'NaglMurs'  },
+];
+
 // ── Константы ──────────────────────────────────────────────────────────────
 const CATEGORIES = [
-  '🥬 Овощи и фрукты',
-  '🥩 Мясо и рыба',
-  '🥛 Молочное',
-  '🍞 Хлеб и выпечка',
-  '🧴 Бытовая химия',
-  '🥫 Бакалея',
-  '🍬 Сладости',
-  '🧃 Напитки',
-  '❓ Другое',
+  '🥬 Овощи и фрукты', '🥩 Мясо и рыба', '🥛 Молочное',
+  '🍞 Хлеб и выпечка', '🧴 Бытовая химия', '🥫 Бакалея',
+  '🍬 Сладости', '🧃 Напитки', '❓ Другое',
 ];
-
 const UNITS = ['шт.', 'кг', 'г', 'л', 'мл', 'упак.', 'пач.'];
 
-const DEFAULT_USERS = [
-  { id: 1, name: 'Папа',  emoji: '👨', role: 'admin' },
-  { id: 2, name: 'Мама',  emoji: '👩', role: 'admin' },
-];
-
 // ── Состояние ──────────────────────────────────────────────────────────────
-let items         = JSON.parse(localStorage.getItem('grocery-items')        || '[]');
-let users         = JSON.parse(localStorage.getItem('grocery-users')        || 'null') || [...DEFAULT_USERS];
-let currentUserId = JSON.parse(localStorage.getItem('grocery-current-user') || 'null');
-let itemHistory   = JSON.parse(localStorage.getItem('grocery-history')      || '[]');
+let items         = JSON.parse(localStorage.getItem('grocery-items')   || '[]');
+let itemHistory   = JSON.parse(localStorage.getItem('grocery-history') || '[]');
+// session: просто хранит id вошедшего пользователя; если есть — пароль не нужен
+let currentUserId = JSON.parse(localStorage.getItem('grocery-session') || 'null');
 let darkMode      = localStorage.getItem('grocery-dark') === 'true';
 let currentFilter = 'all';
 let editingId     = null;
 let dragSrcId     = null;
+let selectedUserId = null; // выбран на шаге 1, ещё не залогинен
 
 // ── Инициализация ──────────────────────────────────────────────────────────
 function init() {
   if (darkMode) document.body.classList.add('dark');
   populateSelects();
 
-  if (currentUserId && users.find(u => u.id === currentUserId)) {
+  if (currentUserId && USERS.find(u => u.id === currentUserId)) {
+    // сессия жива — входим без пароля
     showApp();
   } else {
+    currentUserId = null;
     showLogin();
   }
 }
@@ -43,29 +43,25 @@ function init() {
 function populateSelects() {
   const catOpts  = CATEGORIES.map(c => `<option value="${esc(c)}">${c}</option>`).join('');
   const unitOpts = UNITS.map(u => `<option value="${esc(u)}">${u}</option>`).join('');
-
   document.getElementById('category-select').innerHTML = catOpts;
   document.getElementById('edit-category').innerHTML   = catOpts;
   document.getElementById('unit-select').innerHTML     = unitOpts;
   document.getElementById('edit-unit').innerHTML       = unitOpts;
 }
 
-// ── Авторизация ────────────────────────────────────────────────────────────
+// ── Экран входа ────────────────────────────────────────────────────────────
 function showLogin() {
   document.getElementById('login-screen').classList.remove('hidden');
   document.querySelector('.app').classList.add('hidden');
-  renderUserList();
+  showStep1();
 }
 
-function showApp() {
-  document.getElementById('login-screen').classList.add('hidden');
-  document.querySelector('.app').classList.remove('hidden');
-  updateUserDisplay();
-  render();
-}
+function showStep1() {
+  selectedUserId = null;
+  document.getElementById('login-step1').classList.remove('hidden');
+  document.getElementById('login-step2').classList.add('hidden');
 
-function renderUserList() {
-  document.getElementById('user-list').innerHTML = users.map(u => `
+  document.getElementById('user-list').innerHTML = USERS.map(u => `
     <div class="user-card" onclick="selectUser(${u.id})">
       <div class="user-emoji">${u.emoji}</div>
       <div class="user-name">${esc(u.name)}</div>
@@ -75,19 +71,61 @@ function renderUserList() {
 }
 
 function selectUser(id) {
-  currentUserId = id;
-  localStorage.setItem('grocery-current-user', JSON.stringify(id));
-  showApp();
+  selectedUserId = id;
+  const u = USERS.find(u => u.id === id);
+  document.getElementById('sel-emoji').textContent = u.emoji;
+  document.getElementById('sel-name').textContent  = u.name;
+  document.getElementById('password-input').value  = '';
+  document.getElementById('login-error').classList.add('hidden');
+  document.getElementById('login-step1').classList.add('hidden');
+  document.getElementById('login-step2').classList.remove('hidden');
+  setTimeout(() => document.getElementById('password-input').focus(), 50);
+}
+
+function backToUsers() {
+  showStep1();
+}
+
+function tryLogin() {
+  const u = USERS.find(u => u.id === selectedUserId);
+  const entered = document.getElementById('password-input').value;
+  if (u && entered === u.password) {
+    // Успех — запоминаем сессию
+    currentUserId = u.id;
+    localStorage.setItem('grocery-session', JSON.stringify(u.id));
+    showApp();
+  } else {
+    const err = document.getElementById('login-error');
+    err.classList.remove('hidden');
+    const inp = document.getElementById('password-input');
+    inp.classList.add('error');
+    inp.value = '';
+    inp.focus();
+    setTimeout(() => { inp.classList.remove('error'); err.classList.add('hidden'); }, 2000);
+  }
+}
+
+function togglePwdVisibility() {
+  const inp = document.getElementById('password-input');
+  inp.type = inp.type === 'password' ? 'text' : 'password';
 }
 
 function logout() {
-  if (!confirm('Сменить пользователя?')) return;
+  if (!confirm('Выйти из аккаунта?')) return;
   currentUserId = null;
-  localStorage.removeItem('grocery-current-user');
+  localStorage.removeItem('grocery-session');
   showLogin();
 }
 
-function me()      { return users.find(u => u.id === currentUserId); }
+// ── Основное приложение ────────────────────────────────────────────────────
+function showApp() {
+  document.getElementById('login-screen').classList.add('hidden');
+  document.querySelector('.app').classList.remove('hidden');
+  updateUserDisplay();
+  render();
+}
+
+function me()      { return USERS.find(u => u.id === currentUserId); }
 function isAdmin() { const u = me(); return u && u.role === 'admin'; }
 
 function updateUserDisplay() {
@@ -95,52 +133,6 @@ function updateUserDisplay() {
   if (u) document.getElementById('current-user-display').textContent = `${u.emoji} ${u.name}`;
   document.querySelector('.dark-toggle').textContent = darkMode ? '☀️' : '🌙';
   document.getElementById('footer-actions').style.display = isAdmin() ? 'flex' : 'none';
-}
-
-// ── Управление пользователями ──────────────────────────────────────────────
-function openManageUsers() {
-  renderUsersManage();
-  document.getElementById('manage-modal').classList.remove('hidden');
-}
-
-function closeManageUsers() {
-  document.getElementById('manage-modal').classList.add('hidden');
-}
-
-function renderUsersManage() {
-  document.getElementById('users-list-manage').innerHTML = users.map(u => `
-    <div class="manage-user-row">
-      <span class="manage-user-name">${u.emoji} ${esc(u.name)}</span>
-      <span class="manage-user-role">${u.role === 'admin' ? '👑 Админ' : '👤 Пользователь'}</span>
-      ${users.length > 1
-        ? `<button class="small-btn danger" onclick="removeUser(${u.id})">✕</button>`
-        : ''}
-    </div>
-  `).join('');
-}
-
-function addUser() {
-  const name = document.getElementById('new-user-name').value.trim();
-  if (!name) return;
-  const emoji = document.getElementById('new-user-emoji').value;
-  const role  = document.getElementById('new-user-role').value;
-  users.push({ id: Date.now(), name, emoji, role });
-  saveUsers();
-  document.getElementById('new-user-name').value = '';
-  renderUserList();
-  renderUsersManage();
-}
-
-function removeUser(id) {
-  if (users.length <= 1) return;
-  users = users.filter(u => u.id !== id);
-  saveUsers();
-  renderUserList();
-  renderUsersManage();
-}
-
-function saveUsers() {
-  localStorage.setItem('grocery-users', JSON.stringify(users));
 }
 
 // ── Тёмная тема ────────────────────────────────────────────────────────────
@@ -165,7 +157,6 @@ function addItem() {
     nameInput.focus();
     return;
   }
-
   const category = document.getElementById('category-select').value;
   const qty      = parseInt(document.getElementById('qty-input').value) || 1;
   const unit     = document.getElementById('unit-select').value;
@@ -262,10 +253,8 @@ function saveEdit() {
 document.getElementById('item-input').addEventListener('input', function () {
   const val = this.value.trim().toLowerCase();
   if (!val) { hideAutocomplete(); return; }
-
   const matches = itemHistory.filter(h => h.toLowerCase().includes(val)).slice(0, 6);
   if (!matches.length) { hideAutocomplete(); return; }
-
   const list = document.getElementById('autocomplete-list');
   list.innerHTML = matches.map(m =>
     `<div class="ac-item" data-name="${esc(m)}" onclick="pickAutocomplete(this)">${esc(m)}</div>`
@@ -311,33 +300,25 @@ function onDragStart(e) {
   this.classList.add('dragging');
   e.dataTransfer.effectAllowed = 'move';
 }
-
 function onDragOver(e) {
   e.preventDefault();
   e.dataTransfer.dropEffect = 'move';
   this.classList.add('drag-over');
 }
-
-function onDragLeave() {
-  this.classList.remove('drag-over');
-}
-
+function onDragLeave() { this.classList.remove('drag-over'); }
 function onDrop(e) {
   e.stopPropagation();
   this.classList.remove('drag-over');
   const targetId = parseInt(this.dataset.id);
   if (!dragSrcId || dragSrcId === targetId) return;
-
   const srcIdx = items.findIndex(i => i.id === dragSrcId);
   const tgtIdx = items.findIndex(i => i.id === targetId);
   if (srcIdx === -1 || tgtIdx === -1) return;
-
   const [moved] = items.splice(srcIdx, 1);
   items.splice(tgtIdx, 0, moved);
   saveItems();
   render();
 }
-
 function onDragEnd() {
   document.querySelectorAll('.item').forEach(el =>
     el.classList.remove('dragging', 'drag-over')
@@ -353,8 +334,8 @@ function render() {
 
   const done  = items.filter(i => i.done).length;
   const total = items.length;
-  statsText.textContent      = `${done} из ${total} куплено`;
-  progressFill.style.width   = total ? `${(done / total) * 100}%` : '0%';
+  statsText.textContent    = `${done} из ${total} куплено`;
+  progressFill.style.width = total ? `${(done / total) * 100}%` : '0%';
 
   let filtered = items;
   if (currentFilter === 'active') filtered = items.filter(i => !i.done);
@@ -381,7 +362,8 @@ function render() {
     <div class="category-group">
       <div class="category-header">${cat}</div>
       ${catItems.map(item => {
-        const author  = users.find(u => u.id === item.addedBy);
+        const author  = USERS.find(u => u.id === item.addedBy);
+        // Все видят все продукты; редактировать/удалять — только свои или админ
         const canEdit = isAdmin() || item.addedBy === currentUserId;
         return `
           <div class="item ${item.done ? 'done' : ''}" data-id="${item.id}" draggable="true">
@@ -410,29 +392,28 @@ function render() {
 // ── Вспомогательные ────────────────────────────────────────────────────────
 function esc(str) {
   return String(str)
-    .replace(/&/g, '&amp;')
-    .replace(/</g, '&lt;')
-    .replace(/>/g, '&gt;')
-    .replace(/"/g, '&quot;');
+    .replace(/&/g, '&amp;').replace(/</g, '&lt;')
+    .replace(/>/g, '&gt;').replace(/"/g, '&quot;');
 }
 
 // ── Клавиатура ─────────────────────────────────────────────────────────────
 document.getElementById('item-input').addEventListener('keydown', e => {
-  if (e.key === 'Enter')  addItem();
+  if (e.key === 'Enter') addItem();
   if (e.key === 'Escape') hideAutocomplete();
 });
 
+document.getElementById('password-input').addEventListener('keydown', e => {
+  if (e.key === 'Enter') tryLogin();
+  if (e.key === 'Escape') backToUsers();
+});
+
 document.getElementById('edit-name').addEventListener('keydown', e => {
-  if (e.key === 'Enter')  saveEdit();
+  if (e.key === 'Enter') saveEdit();
   if (e.key === 'Escape') closeEdit();
 });
 
 document.getElementById('edit-modal').addEventListener('click', e => {
   if (e.target === document.getElementById('edit-modal')) closeEdit();
-});
-
-document.getElementById('manage-modal').addEventListener('click', e => {
-  if (e.target === document.getElementById('manage-modal')) closeManageUsers();
 });
 
 // ── Старт ──────────────────────────────────────────────────────────────────
