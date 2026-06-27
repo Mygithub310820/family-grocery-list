@@ -607,7 +607,7 @@ body.dark .cat-emoji { background: rgba(255,255,255,0.12); }
 .cat-purple { background: rgba(156, 39,176,.10); color: #6a1b9a; }
 .cat-brown  { background: rgba(188,143, 95,.18); color: #8d5a2b; }
 .cat-pink   { background: rgba(233, 30, 99,.10); color: #880e4f; }
-.cat-cyan   { background: rgba(  0,188,212,.12); color: #006064; }
+.cat-cyan   { background: rgba(  0,150,136,.15); color: #004d40; }
 .cat-grey   { background: rgba(158,158,158,.10); color: #424242; }
 
 /* Тёмная тема */
@@ -618,7 +618,7 @@ body.dark .cat-amber  { background: rgba(255,193,  7,.18); color: #ffcc80; }
 body.dark .cat-purple { background: rgba(156, 39,176,.15); color: #ce93d8; }
 body.dark .cat-brown  { background: rgba(188,143, 95,.20); color: #d7aa78; }
 body.dark .cat-pink   { background: rgba(233, 30, 99,.15); color: #f48fb1; }
-body.dark .cat-cyan   { background: rgba(  0,188,212,.18); color: #80deea; }
+body.dark .cat-cyan   { background: rgba(  0,150,136,.20); color: #80cbc4; }
 body.dark .cat-grey   { background: rgba(158,158,158,.15); color: #bdbdbd; }
 
 .item {
