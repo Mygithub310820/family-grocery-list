@@ -1,3 +1,14 @@
+// ── Firebase config (заполните своими данными) ─────────────────────────────
+const FIREBASE_CONFIG = {
+  apiKey:            "AIzaSyA2nd4cEt_jEDCzmLxkbK4ahm1KDNEQeeA",
+  authDomain:        "family-grocery-2fd4f.firebaseapp.com",
+  databaseURL:       "https://family-grocery-2fd4f-default-rtdb.europe-west1.firebasedatabase.app",
+  projectId:         "family-grocery-2fd4f",
+  storageBucket:     "family-grocery-2fd4f.firebasestorage.app",
+  messagingSenderId: "165693517574",
+  appId:             "1:165693517574:web:3fed23201fa92c4f01f887",
+};
+
 // ── Пользователи с паролями ────────────────────────────────────────────────
 const USERS = [
   { id: 1, name: 'Papa',   emoji: '👨', role: 'admin', password: 'Asdfg%6'   },
@@ -7,7 +18,6 @@ const USERS = [
   { id: 5, name: 'Dauka',  emoji: '👦', role: 'user',  password: 'NaglMurs'  },
 ];
 
-// ── Константы ──────────────────────────────────────────────────────────────
 const CATEGORIES = [
   '🥬 Овощи и фрукты', '🥩 Мясо и рыба', '🥛 Молочное',
   '🍞 Хлеб и выпечка', '🧴 Бытовая химия', '🥫 Бакалея',
@@ -16,23 +26,49 @@ const CATEGORIES = [
 const UNITS = ['шт.', 'кг', 'г', 'л', 'мл', 'упак.', 'пач.'];
 
 // ── Состояние ──────────────────────────────────────────────────────────────
-let items         = JSON.parse(localStorage.getItem('grocery-items')   || '[]');
+let items         = [];           // синхронизируется с Firebase
 let itemHistory   = JSON.parse(localStorage.getItem('grocery-history') || '[]');
-// session: просто хранит id вошедшего пользователя; если есть — пароль не нужен
 let currentUserId = JSON.parse(localStorage.getItem('grocery-session') || 'null');
 let darkMode      = localStorage.getItem('grocery-dark') === 'true';
 let currentFilter = 'all';
 let editingId     = null;
 let dragSrcId     = null;
-let selectedUserId = null; // выбран на шаге 1, ещё не залогинен
+let selectedUserId = null;
+let dbRef         = null;         // ссылка на Firebase Realtime Database
 
-// ── Инициализация ──────────────────────────────────────────────────────────
+// ── Firebase инициализация ─────────────────────────────────────────────────
+function initFirebase() {
+  firebase.initializeApp(FIREBASE_CONFIG);
+  dbRef = firebase.database().ref('items');
+
+  // Слушаем изменения в реальном времени
+  dbRef.on('value', snapshot => {
+    const data = snapshot.val();
+    items = data ? Object.values(data) : [];
+    // Сортируем по order (для drag & drop)
+    items.sort((a, b) => (a.order || 0) - (b.order || 0));
+    render();
+  });
+}
+
+// ── Сохранение в Firebase ──────────────────────────────────────────────────
+function saveItems() {
+  // Конвертируем массив в объект {id: item}
+  const obj = {};
+  items.forEach((item, idx) => {
+    item.order = idx;
+    obj[item.id] = item;
+  });
+  dbRef.set(obj);
+}
+
+// ── Инициализация UI ──────────────────────────────────────────────────────
 function init() {
   if (darkMode) document.body.classList.add('dark');
   populateSelects();
+  initFirebase();
 
   if (currentUserId && USERS.find(u => u.id === currentUserId)) {
-    // сессия жива — входим без пароля
     showApp();
   } else {
     currentUserId = null;
@@ -60,7 +96,6 @@ function showStep1() {
   selectedUserId = null;
   document.getElementById('login-step1').classList.remove('hidden');
   document.getElementById('login-step2').classList.add('hidden');
-
   document.getElementById('user-list').innerHTML = USERS.map(u => `
     <div class="user-card" onclick="selectUser(${u.id})">
       <div class="user-emoji">${u.emoji}</div>
@@ -82,15 +117,12 @@ function selectUser(id) {
   setTimeout(() => document.getElementById('password-input').focus(), 50);
 }
 
-function backToUsers() {
-  showStep1();
-}
+function backToUsers() { showStep1(); }
 
 function tryLogin() {
   const u = USERS.find(u => u.id === selectedUserId);
   const entered = document.getElementById('password-input').value;
   if (u && entered === u.password) {
-    // Успех — запоминаем сессию
     currentUserId = u.id;
     localStorage.setItem('grocery-session', JSON.stringify(u.id));
     showApp();
@@ -122,7 +154,7 @@ function showApp() {
   document.getElementById('login-screen').classList.add('hidden');
   document.querySelector('.app').classList.remove('hidden');
   updateUserDisplay();
-  render();
+  // render() вызовется автоматически через dbRef.on('value')
 }
 
 function me()      { return USERS.find(u => u.id === currentUserId); }
@@ -144,10 +176,6 @@ function toggleDark() {
 }
 
 // ── CRUD продуктов ─────────────────────────────────────────────────────────
-function saveItems() {
-  localStorage.setItem('grocery-items', JSON.stringify(items));
-}
-
 function addItem() {
   const nameInput = document.getElementById('item-input');
   const name = nameInput.value.trim();
@@ -160,8 +188,11 @@ function addItem() {
   const category = document.getElementById('category-select').value;
   const qty      = parseInt(document.getElementById('qty-input').value) || 1;
   const unit     = document.getElementById('unit-select').value;
+  const id       = Date.now();
 
-  items.push({ id: Date.now(), name, category, qty, unit, done: false, addedBy: currentUserId });
+  const newItem = { id, name, category, qty, unit, done: false, addedBy: currentUserId, order: items.length };
+  // Добавляем сразу в Firebase
+  dbRef.child(String(id)).set(newItem);
 
   if (!itemHistory.includes(name)) {
     itemHistory.unshift(name);
@@ -173,15 +204,12 @@ function addItem() {
   document.getElementById('qty-input').value = '1';
   hideAutocomplete();
   nameInput.focus();
-  saveItems();
-  render();
 }
 
 function toggleItem(id) {
   const item = items.find(i => i.id === id);
-  if (item) item.done = !item.done;
-  saveItems();
-  render();
+  if (!item) return;
+  dbRef.child(String(id)).update({ done: !item.done });
 }
 
 function deleteItem(id) {
@@ -191,25 +219,21 @@ function deleteItem(id) {
     alert('Вы можете удалять только свои продукты');
     return;
   }
-  items = items.filter(i => i.id !== id);
-  saveItems();
-  render();
+  dbRef.child(String(id)).remove();
 }
 
 function clearDone() {
   if (!items.some(i => i.done)) return;
   if (!confirm('Удалить все купленные продукты?')) return;
-  items = items.filter(i => !i.done);
-  saveItems();
-  render();
+  const updates = {};
+  items.filter(i => i.done).forEach(i => { updates[String(i.id)] = null; });
+  dbRef.update(updates);
 }
 
 function clearAll() {
   if (!items.length) return;
   if (!confirm('Очистить весь список?')) return;
-  items = [];
-  saveItems();
-  render();
+  dbRef.set(null);
 }
 
 // ── Редактирование ─────────────────────────────────────────────────────────
@@ -236,17 +260,15 @@ function closeEdit() {
 
 function saveEdit() {
   if (!editingId) return;
-  const item = items.find(i => i.id === editingId);
-  if (!item) return;
   const name = document.getElementById('edit-name').value.trim();
   if (!name) return;
-  item.name     = name;
-  item.category = document.getElementById('edit-category').value;
-  item.qty      = parseInt(document.getElementById('edit-qty').value) || 1;
-  item.unit     = document.getElementById('edit-unit').value;
+  dbRef.child(String(editingId)).update({
+    name,
+    category: document.getElementById('edit-category').value,
+    qty:      parseInt(document.getElementById('edit-qty').value) || 1,
+    unit:     document.getElementById('edit-unit').value,
+  });
   closeEdit();
-  saveItems();
-  render();
 }
 
 // ── Автодополнение ─────────────────────────────────────────────────────────
@@ -317,7 +339,6 @@ function onDrop(e) {
   const [moved] = items.splice(srcIdx, 1);
   items.splice(tgtIdx, 0, moved);
   saveItems();
-  render();
 }
 function onDragEnd() {
   document.querySelectorAll('.item').forEach(el =>
@@ -328,6 +349,9 @@ function onDragEnd() {
 
 // ── Рендер ─────────────────────────────────────────────────────────────────
 function render() {
+  // Если приложение ещё не показано — не рендерим список
+  if (document.querySelector('.app').classList.contains('hidden')) return;
+
   const container    = document.getElementById('list-container');
   const statsText    = document.getElementById('stats-text');
   const progressFill = document.getElementById('progress-fill');
@@ -363,7 +387,6 @@ function render() {
       <div class="category-header">${cat}</div>
       ${catItems.map(item => {
         const author  = USERS.find(u => u.id === item.addedBy);
-        // Все видят все продукты; редактировать/удалять — только свои или админ
         const canEdit = isAdmin() || item.addedBy === currentUserId;
         return `
           <div class="item ${item.done ? 'done' : ''}" data-id="${item.id}" draggable="true">
@@ -387,6 +410,8 @@ function render() {
   `).join('');
 
   setupDragDrop();
+  // Обновляем видимость admin-кнопок после render
+  document.getElementById('footer-actions').style.display = isAdmin() ? 'flex' : 'none';
 }
 
 // ── Вспомогательные ────────────────────────────────────────────────────────
@@ -401,17 +426,14 @@ document.getElementById('item-input').addEventListener('keydown', e => {
   if (e.key === 'Enter') addItem();
   if (e.key === 'Escape') hideAutocomplete();
 });
-
 document.getElementById('password-input').addEventListener('keydown', e => {
   if (e.key === 'Enter') tryLogin();
   if (e.key === 'Escape') backToUsers();
 });
-
 document.getElementById('edit-name').addEventListener('keydown', e => {
   if (e.key === 'Enter') saveEdit();
   if (e.key === 'Escape') closeEdit();
 });
-
 document.getElementById('edit-modal').addEventListener('click', e => {
   if (e.target === document.getElementById('edit-modal')) closeEdit();
 });
