@@ -361,9 +361,10 @@ function render() {
   statsText.textContent    = `${done} из ${total} куплено`;
   progressFill.style.width = total ? `${(done / total) * 100}%` : '0%';
 
-  let filtered = items;
-  if (currentFilter === 'active') filtered = items.filter(i => !i.done);
-  if (currentFilter === 'done')   filtered = items.filter(i => i.done);
+  // Обычные пользователи видят только свои продукты
+  let filtered = isAdmin() ? items : items.filter(i => i.addedBy === currentUserId);
+  if (currentFilter === 'active') filtered = filtered.filter(i => !i.done);
+  if (currentFilter === 'done')   filtered = filtered.filter(i => i.done);
 
   if (!filtered.length) {
     const msgs = {

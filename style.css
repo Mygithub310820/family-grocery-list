@@ -2,8 +2,8 @@
 
 /* ── Переменные (светлая тема) ─────────────────────────────────────── */
 :root {
-  --primary: #4f8ef7;
-  --primary-dark: #3a7ae8;
+  --primary: #00b4c8;
+  --primary-dark: #0099ab;
   --success: #34c97b;
   --danger: #ff5c5c;
   --bg: #f4f6fb;
@@ -42,7 +42,7 @@ body {
   align-items: center;
   justify-content: center;
   padding: 24px;
-  background: linear-gradient(135deg, #4f8ef7 0%, #7b5ea7 100%);
+  background: linear-gradient(135deg, #00b4c8 0%, #00897b 100%);
 }
 
 .login-card {
@@ -297,7 +297,7 @@ body {
 
 /* ── Шапка ─────────────────────────────────────────────────────────── */
 header {
-  background: linear-gradient(135deg, #4f8ef7 0%, #7b5ea7 100%);
+  background: linear-gradient(135deg, #00b4c8 0%, #00897b 100%);
   padding: 24px 20px 0;
   color: white;
 }
