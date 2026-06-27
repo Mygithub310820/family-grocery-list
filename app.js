@@ -568,6 +568,57 @@ function setStatsPeriod(period, btn) {
   if (period !== 'custom') renderStats();
 }
 
+// Цвета для диаграмм
+const PIE_COLORS = [
+  '#00b4c8','#e91e63','#4caf50','#ff9800','#9c27b0',
+  '#f44336','#2196f3','#795548','#009688','#ff5722','#607d8b',
+];
+
+function buildPie(slices, useSpend) {
+  const total = slices.reduce((s, d) => s + (useSpend ? d.spend : d.count), 0);
+  if (!total) return '';
+  const size = 130, cx = 65, cy = 65, r = 58;
+  let angle = -Math.PI / 2;
+  const paths = slices.map((d, i) => {
+    const val   = useSpend ? d.spend : d.count;
+    const sweep = (val / total) * 2 * Math.PI;
+    const x1 = cx + r * Math.cos(angle), y1 = cy + r * Math.sin(angle);
+    angle += sweep;
+    const x2 = cx + r * Math.cos(angle), y2 = cy + r * Math.sin(angle);
+    d._color = PIE_COLORS[i % PIE_COLORS.length];
+    return `<path d="M${cx},${cy} L${x1.toFixed(1)},${y1.toFixed(1)} A${r},${r} 0 ${sweep>Math.PI?1:0},1 ${x2.toFixed(1)},${y2.toFixed(1)} Z" fill="${d._color}" stroke="var(--card)" stroke-width="1.5"/>`;
+  }).join('');
+  const legend = slices.map(d => {
+    const val = useSpend ? d.spend : d.count;
+    const pct = Math.round(val / total * 100);
+    return `<div class="pie-legend-item">
+      <span class="pie-dot" style="background:${d._color}"></span>
+      <span class="pie-legend-label">${esc(d.label)}</span>
+      <span class="pie-legend-pct">${pct}%</span>
+    </div>`;
+  }).join('');
+  return `<div class="stats-pie-wrap">
+    <svg viewBox="0 0 ${size} ${size}" width="${size}" height="${size}">${paths}</svg>
+    <div class="pie-legend">${legend}</div>
+  </div>`;
+}
+
+function toggleStatsSection(header) {
+  const body  = header.nextElementSibling;
+  const arrow = header.querySelector('.s-arrow');
+  const open  = !body.classList.contains('s-collapsed');
+  body.classList.toggle('s-collapsed', open);
+  arrow.textContent = open ? '▶' : '▼';
+}
+
+function collapsibleSection(title, innerHtml) {
+  return `
+    <div class="s-header" onclick="toggleStatsSection(this)">
+      <span>${title}</span><span class="s-arrow">▼</span>
+    </div>
+    <div class="s-body">${innerHtml}</div>`;
+}
+
 function renderStats() {
   const now = Date.now();
   let fromTs, toTs = now;
@@ -596,9 +647,10 @@ function renderStats() {
 
   const totalCount = entries.length;
   const totalSpend = entries.reduce((s, h) => s + (h.price ? h.price * h.qty : 0), 0);
-  const fmt = n => n > 0 ? `${n.toLocaleString('ru')} ₸` : '—';
+  const fmt      = n => n > 0 ? `${n.toLocaleString('ru')} ₸` : '—';
+  const useSpend = totalSpend > 0;
 
-  // По пользователям
+  // По заказчикам
   const byUser = {};
   entries.forEach(h => {
     const k = h.addedBy;
@@ -621,43 +673,52 @@ function renderStats() {
         <div class="stats-value">${totalCount}</div>
         <div class="stats-label">позиций куплено</div>
       </div>
-      ${totalSpend > 0 ? `
-      <div class="stats-card accent">
+      ${useSpend ? `<div class="stats-card accent">
         <div class="stats-value">${fmt(totalSpend)}</div>
         <div class="stats-label">потрачено</div>
       </div>` : ''}
     </div>`;
 
-  // Заказчики — первым разделом
+  // Секция "По заказчикам"
   if (canSeeAll() && Object.keys(byUser).length > 0) {
     const usersSpend = Object.entries(byUser).reduce((s, [, d]) => s + d.spend, 0);
-    html += `<div class="stats-section-title">По заказчикам</div>
-    <div class="stats-table">
-      ${Object.entries(byUser).map(([uid, d]) => {
-        const u = USERS.find(u => u.id === parseInt(uid));
-        return u ? `<div class="stats-row">
-          <span class="stats-cat">${u.emoji} ${esc(u.name)}</span>
-          <span class="stats-count">${d.count} поз.</span>
-          <span class="stats-spend">${fmt(d.spend)}</span>
-        </div>` : '';
-      }).join('')}
-      <div class="stats-row stats-row-total">
-        <span class="stats-cat">📊 По всем</span>
-        <span class="stats-count">${totalCount} поз.</span>
-        <span class="stats-spend">${fmt(usersSpend)}</span>
-      </div>
+    const userSlices = Object.entries(byUser).map(([uid, d]) => {
+      const u = USERS.find(u => u.id === parseInt(uid));
+      return u ? { label: `${u.emoji} ${u.name}`, count: d.count, spend: d.spend } : null;
+    }).filter(Boolean);
+
+    const tableRows = Object.entries(byUser).map(([uid, d]) => {
+      const u = USERS.find(u => u.id === parseInt(uid));
+      return u ? `<div class="stats-row">
+        <span class="stats-cat">${u.emoji} ${esc(u.name)}</span>
+        <span class="stats-count">${d.count} поз.</span>
+        <span class="stats-spend">${fmt(d.spend)}</span>
+      </div>` : '';
+    }).join('') + `<div class="stats-row stats-row-total">
+      <span class="stats-cat">📊 По всем</span>
+      <span class="stats-count">${totalCount} поз.</span>
+      <span class="stats-spend">${fmt(usersSpend)}</span>
     </div>`;
+
+    html += collapsibleSection('По заказчикам',
+      buildPie(userSlices, useSpend) +
+      `<div class="stats-table">${tableRows}</div>`
+    );
   }
 
-  html += `<div class="stats-section-title">По категориям</div>
-    <div class="stats-table">
-      ${Object.entries(byCat).map(([cat, d]) => `
-        <div class="stats-row">
-          <span class="stats-cat">${cat}</span>
-          <span class="stats-count">${d.count} поз.</span>
-          <span class="stats-spend">${fmt(d.spend)}</span>
-        </div>`).join('')}
-    </div>`;
+  // Секция "По категориям"
+  const catSlices = Object.entries(byCat).map(([cat, d]) => ({ label: cat, count: d.count, spend: d.spend }));
+  const catRows   = Object.entries(byCat).map(([cat, d]) => `
+    <div class="stats-row">
+      <span class="stats-cat">${cat}</span>
+      <span class="stats-count">${d.count} поз.</span>
+      <span class="stats-spend">${fmt(d.spend)}</span>
+    </div>`).join('');
+
+  html += collapsibleSection('По категориям',
+    buildPie(catSlices, useSpend) +
+    `<div class="stats-table">${catRows}</div>`
+  );
 
   el.innerHTML = html;
 }

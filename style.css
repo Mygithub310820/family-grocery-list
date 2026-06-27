@@ -723,8 +723,34 @@ input.error {
 .stats-card.accent { background: rgba(0,180,200,0.1); }
 .stats-value { font-size: 1.3rem; font-weight: 700; color: var(--text); }
 .stats-label { font-size: 0.72rem; color: var(--muted); margin-top: 2px; }
-.stats-section-title { font-size: 0.75rem; font-weight: 700; text-transform: uppercase; letter-spacing: 0.05em; color: var(--muted); margin: 14px 0 8px; }
-.stats-table { display: flex; flex-direction: column; gap: 4px; }
+/* Сворачиваемые секции */
+.s-header {
+  display: flex; justify-content: space-between; align-items: center;
+  font-size: 0.78rem; font-weight: 700; text-transform: uppercase;
+  letter-spacing: 0.05em; color: var(--muted);
+  margin: 14px 0 0; padding: 8px 10px;
+  background: var(--bg); border-radius: 8px;
+  cursor: pointer; user-select: none;
+  transition: background 0.15s;
+}
+.s-header:hover { color: var(--primary); }
+.s-arrow { font-size: 0.7rem; transition: transform 0.2s; }
+.s-body { overflow: hidden; transition: max-height 0.3s ease; }
+.s-body.s-collapsed { display: none; }
+
+/* Круговые диаграммы */
+.stats-pie-wrap {
+  display: flex; align-items: center; gap: 12px;
+  padding: 10px 0 6px;
+}
+.pie-legend { display: flex; flex-direction: column; gap: 5px; flex: 1; min-width: 0; }
+.pie-legend-item { display: flex; align-items: center; gap: 6px; font-size: 0.78rem; }
+.pie-dot { width: 10px; height: 10px; border-radius: 50%; flex-shrink: 0; }
+.pie-legend-label { flex: 1; color: var(--text); white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
+.pie-legend-pct { color: var(--muted); font-size: 0.72rem; font-weight: 600; flex-shrink: 0; }
+
+/* Таблица статистики */
+.stats-table { display: flex; flex-direction: column; gap: 4px; margin-top: 6px; }
 .stats-row { display: grid; grid-template-columns: 1fr auto auto; gap: 8px; align-items: center; background: var(--bg); border-radius: 8px; padding: 7px 10px; font-size: 0.84rem; }
 .stats-cat { color: var(--text); }
 .stats-count { color: var(--muted); font-size: 0.78rem; white-space: nowrap; }
@@ -733,6 +759,10 @@ input.error {
 .stats-row-total .stats-cat { color: var(--primary); }
 .stats-row-total .stats-count { color: var(--text); font-weight: 700; }
 .stats-empty { text-align: center; color: var(--muted); padding: 32px 0; font-size: 0.9rem; }
+
+@media (max-width: 400px) {
+  .stats-pie-wrap { flex-direction: column; align-items: flex-start; }
+}
 
 /* ── Нижние кнопки ─────────────────────────────────────────────────── */
 .footer-actions {
