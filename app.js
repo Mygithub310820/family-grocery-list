@@ -31,7 +31,7 @@ const POPULAR = {
   '🥬 Овощи и фрукты': ['Апельсины','Бананы','Капуста','Картофель','Лук','Морковь','Огурцы','Перец болгарский','Помидоры','Чеснок','Яблоки'],
   '🥩 Мясо и рыба':    ['Баранина','Говядина','Жая','Қазы','Қарта','Колбаса','Креветки','Курица','Лосось','Субпродукты','Фарш'],
   '🥛 Молочное':       ['Масло сливочное','Сливки','Сметана','Соевый сомоком','Сомоком','Творог','Яйца','---','Burrata','Cheese Sveza','Halloumi','Stracciatella'],
-  '🍞 Хлеб и выпечка': ['Багет','Батон','Булочки','Круассаны','Лаваш','Пита','Слойки','Тосты','Хлеб белый','Хлеб чёрный','Хлебцы'],
+  '🍞 Хлеб и выпечка': ['Багет','Батон','Булочки','Круассаны','Лаваш','Пита','Слойки','Тосты','Хеб белый','Хеб чёрный','Хлебцы'],
   '🧴 Бытовая химия':  ['Гель для душа','Губки для посуды','Зубная паста','Кондиционер для белья','Мыло','Освежитель воздуха','Порошок стиральный','Салфетки','Средство для посуды','Туалетная бумага','Шампунь'],
   '🥫 Бакалея':        ['Геркулес','Гречка','Ись','Макароны','Мука','Оливковое масло','Подсолнечное масло','Соль','Сахар','Чечевица красная','Чечевица коричневая'],
   '🍬 Сладости':       ['Вафли','Зефир','Карамель','Конфеты','Мармелад','Пастила','Печенье','Пряники','Торт','Халва','Шоколад'],
@@ -570,23 +570,28 @@ function setStatsPeriod(period, btn) {
 
 // Цвета для диаграмм
 const PIE_COLORS = [
-  '#00b4c8','#e91e63','#4caf50','#ff9800','#9c27b0',
-  '#f44336','#2196f3','#795548','#009688','#ff5722','#607d8b',
+  '#6C5CE7','#00CEC9','#FDCB6E','#E17055','#74B9FF',
+  '#A29BFE','#55EFC4','#FD79A8','#00B894','#D63031','#F9CA24',
 ];
 
 function buildPie(slices, useSpend) {
   const total = slices.reduce((s, d) => s + (useSpend ? d.spend : d.count), 0);
   if (!total) return '';
-  const size = 130, cx = 65, cy = 65, r = 58;
+  const size = 160, cx = 80, cy = 80, r = 70, hole = 42;
   let angle = -Math.PI / 2;
   const paths = slices.map((d, i) => {
     const val   = useSpend ? d.spend : d.count;
     const sweep = (val / total) * 2 * Math.PI;
-    const x1 = cx + r * Math.cos(angle), y1 = cy + r * Math.sin(angle);
+    // Внешняя дуга
+    const x1o = cx + r    * Math.cos(angle),    y1o = cy + r    * Math.sin(angle);
+    const x1i = cx + hole * Math.cos(angle),    y1i = cy + hole * Math.sin(angle);
     angle += sweep;
-    const x2 = cx + r * Math.cos(angle), y2 = cy + r * Math.sin(angle);
-    d._color = PIE_COLORS[i % PIE_COLORS.length];
-    return `<path d="M${cx},${cy} L${x1.toFixed(1)},${y1.toFixed(1)} A${r},${r} 0 ${sweep>Math.PI?1:0},1 ${x2.toFixed(1)},${y2.toFixed(1)} Z" fill="${d._color}" stroke="var(--card)" stroke-width="1.5"/>`;
+    const x2o = cx + r    * Math.cos(angle),    y2o = cy + r    * Math.sin(angle);
+    const x2i = cx + hole * Math.cos(angle),    y2i = cy + hole * Math.sin(angle);
+    const lg  = sweep > Math.PI ? 1 : 0;
+    d._color  = PIE_COLORS[i % PIE_COLORS.length];
+    // Бублик-сегмент: внешняя дуга → внутренняя дуга в обратную сторону
+    return `<path d="M${x1i.toFixed(1)},${y1i.toFixed(1)} L${x1o.toFixed(1)},${y1o.toFixed(1)} A${r},${r} 0 ${lg},1 ${x2o.toFixed(1)},${y2o.toFixed(1)} L${x2i.toFixed(1)},${y2i.toFixed(1)} A${hole},${hole} 0 ${lg},0 ${x1i.toFixed(1)},${y1i.toFixed(1)} Z" fill="${d._color}" stroke="var(--card)" stroke-width="2"/>`;
   }).join('');
   const legend = slices.map(d => {
     const val = useSpend ? d.spend : d.count;
@@ -598,7 +603,7 @@ function buildPie(slices, useSpend) {
     </div>`;
   }).join('');
   return `<div class="stats-pie-wrap">
-    <svg viewBox="0 0 ${size} ${size}" width="${size}" height="${size}">${paths}</svg>
+    <svg viewBox="0 0 ${size} ${size}" width="${size}" height="${size}" style="filter:drop-shadow(0 4px 10px rgba(0,0,0,0.18))">${paths}</svg>
     <div class="pie-legend">${legend}</div>
   </div>`;
 }
@@ -611,12 +616,32 @@ function toggleStatsSection(header) {
   arrow.textContent = open ? '▶' : '▼';
 }
 
+function toggleStatRow(row) {
+  const detail = row.nextElementSibling;
+  if (!detail || !detail.classList.contains('stats-row-detail')) return;
+  const arrow  = row.querySelector('.s-row-arrow');
+  const open   = !detail.classList.contains('hidden');
+  detail.classList.toggle('hidden', open);
+  if (arrow) arrow.textContent = open ? '▶' : '▼';
+}
+
 function collapsibleSection(title, innerHtml) {
   return `
     <div class="s-header" onclick="toggleStatsSection(this)">
       <span>${title}</span><span class="s-arrow">▼</span>
     </div>
     <div class="s-body">${innerHtml}</div>`;
+}
+
+function expandableRow(labelHtml, count, spendStr, detailHtml) {
+  return `
+    <div class="stats-row stats-expandable" onclick="toggleStatRow(this)">
+      <span class="stats-cat">${labelHtml}</span>
+      <span class="stats-count">${count} поз.</span>
+      <span class="stats-spend">${spendStr}</span>
+      <span class="s-row-arrow">▶</span>
+    </div>
+    <div class="stats-row-detail hidden">${detailHtml}</div>`;
 }
 
 function renderStats() {
@@ -687,33 +712,49 @@ function renderStats() {
       return u ? { label: `${u.emoji} ${u.name}`, count: d.count, spend: d.spend } : null;
     }).filter(Boolean);
 
-    const tableRows = Object.entries(byUser).map(([uid, d]) => {
+    const userRows = Object.entries(byUser).map(([uid, d]) => {
       const u = USERS.find(u => u.id === parseInt(uid));
-      return u ? `<div class="stats-row">
-        <span class="stats-cat">${u.emoji} ${esc(u.name)}</span>
-        <span class="stats-count">${d.count} поз.</span>
-        <span class="stats-spend">${fmt(d.spend)}</span>
-      </div>` : '';
-    }).join('') + `<div class="stats-row stats-row-total">
+      if (!u) return '';
+      const userEntries = entries.filter(h => h.addedBy === parseInt(uid));
+      const detailHtml  = `<div class="stats-detail-table">${
+        userEntries.map(h => `<div class="stats-detail-row">
+          <span class="sd-name">${esc(h.name)}</span>
+          <span class="sd-qty">${h.qty} ${h.unit || 'шт.'}</span>
+          <span class="sd-price">${h.price ? fmt(h.price * h.qty) : '—'}</span>
+        </div>`).join('')
+      }</div>`;
+      return expandableRow(`${u.emoji} ${esc(u.name)}`, d.count, fmt(d.spend), detailHtml);
+    }).join('');
+
+    const totalRow = `<div class="stats-row stats-row-total">
       <span class="stats-cat">📊 По всем</span>
       <span class="stats-count">${totalCount} поз.</span>
       <span class="stats-spend">${fmt(usersSpend)}</span>
+      <span></span>
     </div>`;
 
     html += collapsibleSection('По заказчикам',
       buildPie(userSlices, useSpend) +
-      `<div class="stats-table">${tableRows}</div>`
+      `<div class="stats-table">${userRows}${totalRow}</div>`
     );
   }
 
   // Секция "По категориям"
   const catSlices = Object.entries(byCat).map(([cat, d]) => ({ label: cat, count: d.count, spend: d.spend }));
-  const catRows   = Object.entries(byCat).map(([cat, d]) => `
-    <div class="stats-row">
-      <span class="stats-cat">${cat}</span>
-      <span class="stats-count">${d.count} поз.</span>
-      <span class="stats-spend">${fmt(d.spend)}</span>
-    </div>`).join('');
+  const catRows   = Object.entries(byCat).map(([cat, d]) => {
+    const catEntries = entries.filter(h => h.category === cat);
+    const detailHtml = `<div class="stats-detail-table">${
+      catEntries.map(h => {
+        const buyer = USERS.find(u => u.id === h.addedBy);
+        return `<div class="stats-detail-row">
+          <span class="sd-name">${esc(h.name)}</span>
+          <span class="sd-qty">${buyer ? buyer.emoji : ''} ${h.qty} ${h.unit || 'шт.'}</span>
+          <span class="sd-price">${h.price ? fmt(h.price * h.qty) : '—'}</span>
+        </div>`;
+      }).join('')
+    }</div>`;
+    return expandableRow(cat, d.count, fmt(d.spend), detailHtml);
+  }).join('');
 
   html += collapsibleSection('По категориям',
     buildPie(catSlices, useSpend) +
