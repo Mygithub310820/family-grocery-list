@@ -20,7 +20,7 @@ const USERS = [
 
 // ── Категории, единицы, популярные товары ──────────────────────────────────
 const CATEGORIES = [
-  '🥬 jОВОЩИ И ФРУТКИ', '🥩 Мясо и рыба', '🥛 Молочное',
+  '🥬 ОВОЩИ И ФРУТКИ', '🥩 Мясо и рыба', '🥛 Молочное',
   '🍞 Хлеб и выпечка', '🧴 Бытовая химия', '🥫 Бакалея',
   '🍬 Сладости', '🧃 Напитки', '❓ Другое',
 ];
@@ -28,7 +28,7 @@ const UNITS = ['шт.', 'кг', 'г', 'л', 'мл', 'упак.', 'пач.'];
 
 // '---' — разделитель (пунктирная линия)
 const POPULAR = {
-  '🥬 jОВОЩИ И ФРУТКИ': ['Апельсины','Бананы','Капуста','Картофель','Лук','Морковь','Огурцы','Перец болгарский','Помидоры','Свекла','Чеснок','Яблоки'],
+  '🥬 ОВОЩИ И ФРУТКИ': ['Апельсины','Бананы','Капуста','Картофель','Лук','Морковь','Огурцы','Перец болгарский','Помидоры','Свекла','Чеснок','Яблоки'],
   '🥩 Мясо и рыба':    ['Баранина','Говядина','Жая','Қазы','Қарта','Колбаса','Креветки','Курица','Лосось','Субпродукты','Фарш'],
   '🥛 Молочное':       ['Масло сливочное','Сливки','Сметана','Соевый сомоком','Сомоком','Творог','Яйца','---','Burrata','Cheese Sveza','Halloumi','Stracciatella'],
   '🍞 Хлеб и выпечка': ['Багет','Батон','Булочки','Круассаны','Лаваш','Пита','Слойки','Тосты','Хеб белый','Хеб чёрный','Хлебцы'],
@@ -39,9 +39,16 @@ const POPULAR = {
   '❓ Другое':         [],
 };
 
+// ── Нормализация старых названий категорий ─────────────────────────────────
+const CAT_ALIASES = {
+  '🥬 Овощи и фрукты':  '🥬 ОВОЩИ И ФРУТКИ',
+  '🥬 jОВОЩИ И ФРУТКИ': '🥬 ОВОЩИ И ФРУТКИ',
+};
+function normCat(cat) { return CAT_ALIASES[cat] || cat; }
+
 // ── CSS-классы категорий ───────────────────────────────────────────────────
 const CAT_CLASSES = {
-  '🥬 jОВОЩИ И ФРУТКИ': 'cat-green',
+  '🥬 ОВОЩИ И ФРУТКИ': 'cat-green',
   '🥩 Мясо и рыба':    'cat-red',
   '🥛 Молочное':       'cat-blue',
   '🍞 Хлеб и выпечка': 'cat-amber',
@@ -530,8 +537,9 @@ function render() {
 
   const groups = {};
   filtered.forEach(item => {
-    if (!groups[item.category]) groups[item.category] = [];
-    groups[item.category].push(item);
+    const cat = normCat(item.category);
+    if (!groups[cat]) groups[cat] = [];
+    groups[cat].push(item);
   });
 
   container.innerHTML = Object.entries(groups).map(([cat, catItems]) => {
@@ -708,9 +716,10 @@ function renderStats() {
   // По категориям
   const byCat = {};
   entries.forEach(h => {
-    if (!byCat[h.category]) byCat[h.category] = { count: 0, spend: 0 };
-    byCat[h.category].count++;
-    byCat[h.category].spend += h.price ? h.price * h.qty : 0;
+    const cat = normCat(h.category);
+    if (!byCat[cat]) byCat[cat] = { count: 0, spend: 0 };
+    byCat[cat].count++;
+    byCat[cat].spend += h.price ? h.price * h.qty : 0;
   });
 
   let html = `

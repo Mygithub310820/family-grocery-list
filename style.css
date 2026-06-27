@@ -748,7 +748,22 @@ body.dark .cat-grey   { background: rgba(158,158,158,.15); color: #bdbdbd; }
 .empty-state p { font-size: 0.92rem; }
 
 /* ── Статистика ────────────────────────────────────────────────────── */
-.modal-wide { max-width: 520px; }
+.modal-wide {
+  max-width: 520px;
+  max-height: 88vh;
+  display: flex;
+  flex-direction: column;
+}
+.modal-wide .modal-header { flex-shrink: 0; }
+.modal-wide .stats-periods { flex-shrink: 0; }
+.modal-wide .custom-period { flex-shrink: 0; }
+.modal-wide .stats-summary { flex-shrink: 0; }
+#stats-content {
+  overflow-y: auto;
+  -webkit-overflow-scrolling: touch;
+  flex: 1;
+  min-height: 0;
+}
 .stats-periods { display: flex; gap: 6px; flex-wrap: wrap; margin-bottom: 10px; }
 .period-btn { background: var(--bg); border: 1.5px solid var(--border); border-radius: 20px; padding: 5px 12px; font-size: 0.8rem; cursor: pointer; color: var(--muted); transition: all 0.2s; }
 .period-btn.active { background: var(--primary); border-color: var(--primary); color: white; }
