@@ -583,27 +583,40 @@ input.error {
   gap: 8px;
   border-bottom: 1px solid var(--border);
 }
-.cat-emoji { font-size: 1.2rem; line-height: 1; }
+.cat-emoji {
+  font-size: 1.25rem;
+  line-height: 1;
+  width: 28px;
+  height: 28px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  background: rgba(255,255,255,0.55);
+  border-radius: 8px;
+  flex-shrink: 0;
+  box-shadow: 0 1px 3px rgba(0,0,0,0.10);
+}
+body.dark .cat-emoji { background: rgba(255,255,255,0.12); }
 .cat-name  { flex: 1; }
 
 /* Цвета категорий — мягкий фон + соответствующий текст */
 .cat-green  { background: rgba( 76,175, 80,.10); color: #2e7d32; }
 .cat-red    { background: rgba(244, 67, 54,.10); color: #b71c1c; }
-.cat-blue   { background: rgba( 33,150,243,.10); color: #1565c0; }
+.cat-blue   { background: rgba( 79,195,247,.18); color: #0277bd; }
 .cat-amber  { background: rgba(255,193,  7,.15); color: #e65100; }
 .cat-purple { background: rgba(156, 39,176,.10); color: #6a1b9a; }
-.cat-brown  { background: rgba(121, 85, 72,.12); color: #4e342e; }
+.cat-brown  { background: rgba(188,143, 95,.18); color: #8d5a2b; }
 .cat-pink   { background: rgba(233, 30, 99,.10); color: #880e4f; }
 .cat-cyan   { background: rgba(  0,188,212,.12); color: #006064; }
 .cat-grey   { background: rgba(158,158,158,.10); color: #424242; }
 
-/* Тёмная тема — чуть ярче тексты */
+/* Тёмная тема */
 body.dark .cat-green  { background: rgba( 76,175, 80,.15); color: #81c784; }
 body.dark .cat-red    { background: rgba(244, 67, 54,.15); color: #ef9a9a; }
-body.dark .cat-blue   { background: rgba( 33,150,243,.15); color: #90caf9; }
+body.dark .cat-blue   { background: rgba( 79,195,247,.18); color: #81d4fa; }
 body.dark .cat-amber  { background: rgba(255,193,  7,.18); color: #ffcc80; }
 body.dark .cat-purple { background: rgba(156, 39,176,.15); color: #ce93d8; }
-body.dark .cat-brown  { background: rgba(121, 85, 72,.18); color: #bcaaa4; }
+body.dark .cat-brown  { background: rgba(188,143, 95,.20); color: #d7aa78; }
 body.dark .cat-pink   { background: rgba(233, 30, 99,.15); color: #f48fb1; }
 body.dark .cat-cyan   { background: rgba(  0,188,212,.18); color: #80deea; }
 body.dark .cat-grey   { background: rgba(158,158,158,.15); color: #bdbdbd; }
