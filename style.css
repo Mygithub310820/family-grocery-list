@@ -466,11 +466,35 @@ input.error {
   margin: 2px 0;
 }
 
-/* Запрос цены */
-.price-prompt-modal { max-width: 320px; }
+/* Чекбокс Стекло */
+.glass-option { display: flex; align-items: center; }
+.glass-label  {
+  display: flex; align-items: center; gap: 8px;
+  background: var(--bg); border: 1.5px solid var(--border);
+  border-radius: 10px; padding: 6px 14px;
+  cursor: pointer; font-size: 0.85rem; font-weight: 500;
+  transition: all 0.2s; user-select: none;
+}
+.glass-label:hover { border-color: var(--primary); }
+.glass-label input[type="checkbox"] { width: 16px; height: 16px; accent-color: var(--primary); cursor: pointer; }
+.glass-label input[type="checkbox"]:checked + .glass-box { filter: none; }
+.glass-box { font-size: 1.1rem; }
+
+/* Значок стекло в строке товара */
+.item-glass { font-size: 0.85rem; }
+
+/* Промпт подтверждения покупки */
+.price-prompt-modal { max-width: 340px; }
 .price-prompt-title { font-size: 1rem; font-weight: 700; margin-bottom: 6px; }
 .price-prompt-item  { font-size: 0.85rem; color: var(--muted); margin-bottom: 12px; }
-.price-prompt-btns  { display: grid; grid-template-columns: 1fr 1fr; gap: 10px; margin-top: 12px; }
+.price-prompt-row   {
+  display: flex; align-items: center; gap: 8px;
+  margin-bottom: 10px;
+}
+.pp-label { font-size: 0.82rem; color: var(--muted); white-space: nowrap; width: 80px; flex-shrink: 0; }
+.price-prompt-row input[type="number"] { width: 75px; flex-shrink: 0; }
+.price-prompt-row select { flex: 1; }
+.price-prompt-btns { display: grid; grid-template-columns: 1fr 1fr; gap: 10px; margin-top: 4px; }
 
 /* ── Автодополнение ────────────────────────────────────────────────── */
 .autocomplete-list {

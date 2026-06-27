@@ -4,7 +4,7 @@
   <meta charset="UTF-8" />
   <meta name="viewport" content="width=device-width, initial-scale=1.0" />
   <title>Семейный список продуктов</title>
-  <link rel="stylesheet" href="style.css?v=9" />
+  <link rel="stylesheet" href="style.css?v=10" />
 </head>
 <body>
 
@@ -55,12 +55,20 @@
     </div>
   </div>
 
-  <!-- Запрос цены при отметке куплено -->
+  <!-- Запрос фактических данных при отметке куплено -->
   <div id="price-prompt" class="modal-overlay hidden">
     <div class="modal price-prompt-modal">
-      <div class="price-prompt-title">💰 Введёте фактическую цену?</div>
+      <div class="price-prompt-title">✅ Подтвердите покупку</div>
       <div class="price-prompt-item" id="price-prompt-name"></div>
-      <input type="number" id="price-prompt-input" placeholder="Цена в ₸" min="0" step="1" onfocus="this.select()" />
+      <div class="price-prompt-row">
+        <label class="pp-label">Количество:</label>
+        <input type="number" id="price-prompt-qty" min="0.001" step="any" onfocus="this.select()" />
+        <select id="price-prompt-unit"></select>
+      </div>
+      <div class="price-prompt-row">
+        <label class="pp-label">Цена, ₸:</label>
+        <input type="number" id="price-prompt-input" placeholder="необязательно" min="0" step="1" onfocus="this.select()" style="flex:1" />
+      </div>
       <div class="price-prompt-btns">
         <button class="back-btn" onclick="skipPrice()">Пропустить</button>
         <button class="login-btn" onclick="confirmPrice()">Сохранить</button>
@@ -118,6 +126,14 @@
         <select id="category-select" onchange="updatePopular()"></select>
         <!-- Кнопки-чипы популярных товаров -->
         <div id="popular-items" class="popular-items"></div>
+        <!-- Чекбокс "Стекло" — только для Напитков -->
+        <div id="glass-option" class="glass-option hidden">
+          <label class="glass-label">
+            <input type="checkbox" id="glass-check" />
+            <span class="glass-box">🍶</span>
+            <span>Стекло</span>
+          </label>
+        </div>
         <!-- Поле ручного ввода -->
         <div class="input-wrap hidden" id="manual-wrap">
           <input type="text" id="item-input" placeholder="Введите название..." autocomplete="off" />
@@ -151,6 +167,6 @@
 
   <script src="https://www.gstatic.com/firebasejs/9.23.0/firebase-app-compat.js"></script>
   <script src="https://www.gstatic.com/firebasejs/9.23.0/firebase-database-compat.js"></script>
-  <script src="app.js?v=9"></script>
+  <script src="app.js?v=10"></script>
 </body>
 </html>

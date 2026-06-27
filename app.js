@@ -35,7 +35,7 @@ const POPULAR = {
   '🧴 Бытовая химия':  ['Гель для душа','Губки для посуды','Зубная паста','Кондиционер для белья','Мыло','Освежитель воздуха','Порошок стиральный','Салфетки','Средство для посуды','Туалетная бумага','Шампунь'],
   '🥫 Бакалея':        ['Геркулес','Гречка','Ись','Макароны','Мука','Оливковое масло','Подсолнечное масло','Соль','Сахар','Чечевица красная','Чечевица коричневая'],
   '🍬 Сладости':       ['Вафли','Зефир','Карамель','Конфеты','Мармелад','Пастила','Печенье','Пряники','Торт','Халва','Шоколад'],
-  '🧃 Напитки':        ['Вода без газиков','Вода с газиками','Какао','Квас','Кофе','Компот','Лимонад','Морс','Сок','Чай','Энергетик'],
+  '🧃 Напитки':        ['Боржоми','Вода без газиков','Вода с газиками','Какао','Квас','Кофе','Компот','Лимонад','Сарыағаш','Сок','Чай'],
   '❓ Другое':         [],
 };
 
@@ -98,10 +98,11 @@ function init() {
 function populateSelects() {
   const catOpts  = CATEGORIES.map(c => `<option value="${esc(c)}">${c}</option>`).join('');
   const unitOpts = UNITS.map(u => `<option value="${esc(u)}">${u}</option>`).join('');
-  document.getElementById('category-select').innerHTML = catOpts;
-  document.getElementById('edit-category').innerHTML   = catOpts;
-  document.getElementById('unit-select').innerHTML     = unitOpts;
-  document.getElementById('edit-unit').innerHTML       = unitOpts;
+  document.getElementById('category-select').innerHTML    = catOpts;
+  document.getElementById('edit-category').innerHTML      = catOpts;
+  document.getElementById('unit-select').innerHTML        = unitOpts;
+  document.getElementById('edit-unit').innerHTML          = unitOpts;
+  document.getElementById('price-prompt-unit').innerHTML  = unitOpts;
   updatePopular();
 }
 
@@ -207,6 +208,11 @@ function updatePopular() {
   }).join('')
   + `<button class="popular-btn manual-btn" onclick="pickManual()">✏️ Вручную</button>`;
 
+  // Показываем/скрываем чекбокс Стекло
+  const isNapitki = cat === '🧃 Напитки';
+  document.getElementById('glass-option').classList.toggle('hidden', !isNapitki);
+  if (!isNapitki) document.getElementById('glass-check').checked = false;
+
   // Сброс
   document.getElementById('item-input').value  = '';
   document.getElementById('price-input').value = '';
@@ -257,14 +263,15 @@ function addItem() {
   const qty      = parseInt(document.getElementById('qty-input').value) || 1;
   const unit     = document.getElementById('unit-select').value;
   const priceVal = parseFloat(document.getElementById('price-input').value) || null;
+  const glass    = document.getElementById('glass-check')?.checked || false;
   const id       = Date.now();
 
   if (priceVal) pricesRef.child(priceKey(finalName)).set(priceVal);
 
   dbRef.child(String(id)).set({
     id, name: finalName, category, qty, unit,
-    price: priceVal, done: false,
-    addedBy: currentUserId, order: items.length,
+    price: priceVal, glass: glass || false,
+    done: false, addedBy: currentUserId, order: items.length,
   });
 
   if (!itemHistory.includes(finalName)) {
@@ -296,12 +303,14 @@ function toggleItem(id) {
 
   // Отмечаем куплено
   if (!item.price) {
-    // Нет цены — спросить
+    // Нет цены — показываем промпт с qty/unit/price
     pendingDoneId = id;
-    document.getElementById('price-prompt-name').textContent = item.name;
-    document.getElementById('price-prompt-input').value = '';
+    document.getElementById('price-prompt-name').textContent   = item.name;
+    document.getElementById('price-prompt-qty').value          = item.qty || 1;
+    document.getElementById('price-prompt-unit').value         = item.unit || 'шт.';
+    document.getElementById('price-prompt-input').value        = '';
     document.getElementById('price-prompt').classList.remove('hidden');
-    setTimeout(() => document.getElementById('price-prompt-input').focus(), 50);
+    setTimeout(() => document.getElementById('price-prompt-qty').focus(), 50);
   } else {
     markItemDone(id, item.price);
   }
@@ -315,14 +324,27 @@ function skipPrice() {
 
 function confirmPrice() {
   const priceVal = parseFloat(document.getElementById('price-prompt-input').value) || null;
+  const qtyVal   = parseFloat(document.getElementById('price-prompt-qty').value)   || null;
+  const unitVal  = document.getElementById('price-prompt-unit').value;
   document.getElementById('price-prompt').classList.add('hidden');
+
   if (pendingDoneId !== null) {
     const item = items.find(i => i.id === pendingDoneId);
-    if (item && priceVal) {
-      pricesRef.child(priceKey(item.name)).set(priceVal);
-      dbRef.child(String(pendingDoneId)).update({ price: priceVal });
+    if (item) {
+      const updates = { done: true };
+      if (priceVal)                      { updates.price = priceVal; pricesRef.child(priceKey(item.name)).set(priceVal); }
+      if (qtyVal  && qtyVal  !== item.qty)  updates.qty  = qtyVal;
+      if (unitVal && unitVal !== item.unit) updates.unit = unitVal;
+      dbRef.child(String(pendingDoneId)).update(updates);
+
+      historyRef.child(String(pendingDoneId)).set({
+        itemId: item.id, name: item.name, category: item.category,
+        qty:   qtyVal  || item.qty,
+        unit:  unitVal || item.unit || 'шт.',
+        price: priceVal || null,
+        addedBy: item.addedBy, completedAt: Date.now(),
+      });
     }
-    markItemDone(pendingDoneId, priceVal);
   }
   pendingDoneId = null;
 }
@@ -504,6 +526,7 @@ function render() {
         const cm       = canManage(item);
         const priceStr = item.price
           ? `<span class="item-price">${(item.price * item.qty).toLocaleString('ru')} ₸</span>` : '';
+        const glassStr = item.glass ? `<span class="item-glass" title="Стекло">🍶</span>` : '';
         return `
           <div class="item ${item.done ? 'done' : ''}" data-id="${item.id}" draggable="true">
             <div class="drag-handle">⠿</div>
@@ -513,6 +536,7 @@ function render() {
               <div class="item-meta">
                 <span class="item-qty">${item.qty} ${item.unit || 'шт.'}</span>
                 ${priceStr}
+                ${glassStr}
                 ${author ? `<span class="item-author">${author.emoji} ${esc(author.name)}</span>` : ''}
               </div>
             </div>
@@ -657,6 +681,10 @@ document.getElementById('edit-name').addEventListener('keydown', e => {
 });
 document.getElementById('price-prompt-input').addEventListener('keydown', e => {
   if (e.key === 'Enter') confirmPrice();
+  if (e.key === 'Escape') skipPrice();
+});
+document.getElementById('price-prompt-qty').addEventListener('keydown', e => {
+  if (e.key === 'Enter') document.getElementById('price-prompt-input').focus();
   if (e.key === 'Escape') skipPrice();
 });
 document.getElementById('edit-modal').addEventListener('click', e => {
