@@ -1,4 +1,4 @@
-// ── Firebase config (заполните своими данными) ─────────────────────────────
+// ── Firebase config ────────────────────────────────────────────────────────
 const FIREBASE_CONFIG = {
   apiKey:            "AIzaSyA2nd4cEt_jEDCzmLxkbK4ahm1KDNEQeeA",
   authDomain:        "family-grocery-2fd4f.firebaseapp.com",
@@ -9,7 +9,7 @@ const FIREBASE_CONFIG = {
   appId:             "1:165693517574:web:3fed23201fa92c4f01f887",
 };
 
-// ── Пользователи с паролями ────────────────────────────────────────────────
+// ── Пользователи ───────────────────────────────────────────────────────────
 const USERS = [
   { id: 1, name: 'Papa',   emoji: '👨', role: 'admin', password: 'Asdfg%6',   seeAll: true  },
   { id: 2, name: 'Mama',   emoji: '👩', role: 'admin', password: 'SuluQyz18', seeAll: true  },
@@ -18,6 +18,7 @@ const USERS = [
   { id: 5, name: 'Dauka',  emoji: '👦', role: 'user',  password: 'NaglMurs',  seeAll: true  },
 ];
 
+// ── Категории и популярные товары ──────────────────────────────────────────
 const CATEGORIES = [
   '🥬 Овощи и фрукты', '🥩 Мясо и рыба', '🥛 Молочное',
   '🍞 Хлеб и выпечка', '🧴 Бытовая химия', '🥫 Бакалея',
@@ -38,7 +39,9 @@ const POPULAR = {
 };
 
 // ── Состояние ──────────────────────────────────────────────────────────────
-let items         = [];           // синхронизируется с Firebase
+let items         = [];
+let historyData   = {};   // {itemId: {name,qty,unit,price,category,addedBy,completedAt}}
+let prices        = {};   // {priceKey: price}
 let itemHistory   = JSON.parse(localStorage.getItem('grocery-history') || '[]');
 let currentUserId = JSON.parse(localStorage.getItem('grocery-session') || 'null');
 let darkMode      = localStorage.getItem('grocery-dark') === 'true';
@@ -46,40 +49,48 @@ let currentFilter = 'all';
 let editingId     = null;
 let dragSrcId     = null;
 let selectedUserId = null;
-let dbRef         = null;         // ссылка на Firebase Realtime Database
+let statsPeriod   = 'today';
 
-// ── Firebase инициализация ─────────────────────────────────────────────────
+let dbRef, historyRef, pricesRef;
+
+// ── Firebase ───────────────────────────────────────────────────────────────
 function initFirebase() {
   firebase.initializeApp(FIREBASE_CONFIG);
-  dbRef = firebase.database().ref('items');
+  dbRef      = firebase.database().ref('items');
+  historyRef = firebase.database().ref('history');
+  pricesRef  = firebase.database().ref('prices');
 
-  // Слушаем изменения в реальном времени
   dbRef.on('value', snapshot => {
     const data = snapshot.val();
     items = data ? Object.values(data) : [];
-    // Сортируем по order (для drag & drop)
     items.sort((a, b) => (a.order || 0) - (b.order || 0));
     render();
   });
+
+  historyRef.on('value', snapshot => {
+    historyData = snapshot.val() || {};
+  });
+
+  pricesRef.on('value', snapshot => {
+    prices = snapshot.val() || {};
+  });
 }
 
-// ── Сохранение в Firebase ──────────────────────────────────────────────────
+function priceKey(name) {
+  return name.trim().toLowerCase().replace(/[^a-zа-яё0-9]/gi, '_');
+}
+
 function saveItems() {
-  // Конвертируем массив в объект {id: item}
   const obj = {};
-  items.forEach((item, idx) => {
-    item.order = idx;
-    obj[item.id] = item;
-  });
+  items.forEach((item, idx) => { item.order = idx; obj[item.id] = item; });
   dbRef.set(obj);
 }
 
-// ── Инициализация UI ──────────────────────────────────────────────────────
+// ── Инициализация ──────────────────────────────────────────────────────────
 function init() {
   if (darkMode) document.body.classList.add('dark');
   populateSelects();
   initFirebase();
-
   if (currentUserId && USERS.find(u => u.id === currentUserId)) {
     showApp();
   } else {
@@ -98,7 +109,7 @@ function populateSelects() {
   updatePopular();
 }
 
-// ── Экран входа ────────────────────────────────────────────────────────────
+// ── Авторизация ────────────────────────────────────────────────────────────
 function showLogin() {
   document.getElementById('login-screen').classList.remove('hidden');
   document.querySelector('.app').classList.add('hidden');
@@ -133,7 +144,7 @@ function selectUser(id) {
 function backToUsers() { showStep1(); }
 
 function tryLogin() {
-  const u = USERS.find(u => u.id === selectedUserId);
+  const u       = USERS.find(u => u.id === selectedUserId);
   const entered = document.getElementById('password-input').value;
   if (u && entered === u.password) {
     currentUserId = u.id;
@@ -162,12 +173,10 @@ function logout() {
   showLogin();
 }
 
-// ── Основное приложение ────────────────────────────────────────────────────
 function showApp() {
   document.getElementById('login-screen').classList.add('hidden');
   document.querySelector('.app').classList.remove('hidden');
   updateUserDisplay();
-  // render() вызовется автоматически через dbRef.on('value')
 }
 
 function me()        { return USERS.find(u => u.id === currentUserId); }
@@ -198,46 +207,64 @@ function updatePopular() {
   sel.innerHTML = `<option value="">-- выбрать из списка:</option>`
     + popular.map(p => `<option value="${esc(p)}">${p}</option>`).join('')
     + `<option value="__manual__">✏️ Ввести вручную...</option>`;
-  document.getElementById('item-input').value = '';
+  document.getElementById('item-input').value  = '';
+  document.getElementById('price-input').value = '';
   document.getElementById('manual-wrap').classList.add('hidden');
   hideAutocomplete();
 }
 
 function pickPopular() {
-  const val     = document.getElementById('popular-select').value;
-  const manual  = document.getElementById('manual-wrap');
-  const input   = document.getElementById('item-input');
+  const val    = document.getElementById('popular-select').value;
+  const manual = document.getElementById('manual-wrap');
+  const input  = document.getElementById('item-input');
   if (val === '__manual__') {
     manual.classList.remove('hidden');
     input.value = '';
+    document.getElementById('price-input').value = '';
     setTimeout(() => input.focus(), 50);
   } else if (val) {
     manual.classList.add('hidden');
     input.value = val;
+    fillPrice(val);
   } else {
     manual.classList.add('hidden');
     input.value = '';
+    document.getElementById('price-input').value = '';
   }
+}
+
+function fillPrice(name) {
+  const p = prices[priceKey(name)];
+  document.getElementById('price-input').value = p ? p : '';
 }
 
 // ── CRUD продуктов ─────────────────────────────────────────────────────────
 function addItem() {
-  const nameInput = document.getElementById('item-input');
-  const name = nameInput.value.trim();
+  const nameInput  = document.getElementById('item-input');
+  const popSel     = document.getElementById('popular-select');
+  // Имя берём из ручного поля или из популярного выбора
+  const name = nameInput.value.trim() || (popSel.value && popSel.value !== '__manual__' ? popSel.value : '');
   if (!name) {
     nameInput.classList.add('error');
     setTimeout(() => nameInput.classList.remove('error'), 800);
-    nameInput.focus();
     return;
   }
   const category = document.getElementById('category-select').value;
   const qty      = parseInt(document.getElementById('qty-input').value) || 1;
   const unit     = document.getElementById('unit-select').value;
+  const priceVal = parseFloat(document.getElementById('price-input').value) || null;
   const id       = Date.now();
 
-  const newItem = { id, name, category, qty, unit, done: false, addedBy: currentUserId, order: items.length };
-  // Добавляем сразу в Firebase
-  dbRef.child(String(id)).set(newItem);
+  // Запоминаем цену
+  if (priceVal) pricesRef.child(priceKey(name)).set(priceVal);
+
+  dbRef.child(String(id)).set({
+    id, name, category, qty, unit,
+    price: priceVal,
+    done: false,
+    addedBy: currentUserId,
+    order: items.length,
+  });
 
   if (!itemHistory.includes(name)) {
     itemHistory.unshift(name);
@@ -245,39 +272,61 @@ function addItem() {
     localStorage.setItem('grocery-history', JSON.stringify(itemHistory));
   }
 
+  // Сброс формы
   nameInput.value = '';
-  document.getElementById('qty-input').value = '1';
+  document.getElementById('qty-input').value    = '1';
+  document.getElementById('price-input').value  = '';
+  document.getElementById('popular-select').value = '';
+  document.getElementById('manual-wrap').classList.add('hidden');
   hideAutocomplete();
-  nameInput.focus();
 }
 
 function toggleItem(id) {
   const item = items.find(i => i.id === id);
   if (!item) return;
-  dbRef.child(String(id)).update({ done: !item.done });
+  const nowDone = !item.done;
+  dbRef.child(String(id)).update({ done: nowDone });
+
+  if (nowDone) {
+    // Сохраняем в историю покупок
+    historyRef.child(String(id)).set({
+      itemId:      id,
+      name:        item.name,
+      category:    item.category,
+      qty:         item.qty,
+      unit:        item.unit || 'шт.',
+      price:       item.price || null,
+      addedBy:     item.addedBy,
+      completedAt: Date.now(),
+    });
+  } else {
+    // Отменяем покупку — убираем из истории
+    historyRef.child(String(id)).remove();
+  }
 }
 
 function deleteItem(id) {
   const item = items.find(i => i.id === id);
   if (!item) return;
-  if (!canManage(item)) {
-    alert('Вы можете удалять только свои продукты');
-    return;
-  }
+  if (!canManage(item)) { alert('Вы можете удалять только свои продукты'); return; }
   dbRef.child(String(id)).remove();
+  // Если был помечен куплено и вручную удалили — убираем из истории
+  if (item.done) historyRef.child(String(id)).remove();
 }
 
 function clearDone() {
   if (!items.some(i => i.done)) return;
-  if (!confirm('Удалить все купленные продукты?')) return;
+  if (!confirm('Удалить все купленные из списка?\n(История покупок сохранится)')) return;
   const updates = {};
   items.filter(i => i.done).forEach(i => { updates[String(i.id)] = null; });
   dbRef.update(updates);
+  // История НЕ очищается — это записи о покупках
 }
 
 function clearAll() {
   if (!items.length) return;
-  if (!confirm('Очистить весь список?')) return;
+  if (!confirm('Очистить весь список?\n(История покупок сохранится)')) return;
+  items.filter(i => i.done).forEach(i => historyRef.child(String(i.id)).remove());
   dbRef.set(null);
 }
 
@@ -285,15 +334,13 @@ function clearAll() {
 function openEdit(id) {
   const item = items.find(i => i.id === id);
   if (!item) return;
-  if (!canManage(item)) {
-    alert('Вы можете редактировать только свои продукты');
-    return;
-  }
+  if (!canManage(item)) { alert('Вы можете редактировать только свои продукты'); return; }
   editingId = id;
   document.getElementById('edit-name').value     = item.name;
   document.getElementById('edit-category').value = item.category;
   document.getElementById('edit-qty').value      = item.qty;
   document.getElementById('edit-unit').value     = item.unit || 'шт.';
+  document.getElementById('edit-price').value    = item.price || '';
   document.getElementById('edit-modal').classList.remove('hidden');
   document.getElementById('edit-name').focus();
 }
@@ -305,13 +352,16 @@ function closeEdit() {
 
 function saveEdit() {
   if (!editingId) return;
-  const name = document.getElementById('edit-name').value.trim();
+  const name     = document.getElementById('edit-name').value.trim();
   if (!name) return;
+  const priceVal = parseFloat(document.getElementById('edit-price').value) || null;
+  if (priceVal) pricesRef.child(priceKey(name)).set(priceVal);
   dbRef.child(String(editingId)).update({
     name,
     category: document.getElementById('edit-category').value,
     qty:      parseInt(document.getElementById('edit-qty').value) || 1,
     unit:     document.getElementById('edit-unit').value,
+    price:    priceVal,
   });
   closeEdit();
 }
@@ -330,7 +380,9 @@ document.getElementById('item-input').addEventListener('input', function () {
 });
 
 function pickAutocomplete(el) {
-  document.getElementById('item-input').value = el.dataset.name;
+  const name = el.dataset.name;
+  document.getElementById('item-input').value = name;
+  fillPrice(name);
   hideAutocomplete();
   document.getElementById('item-input').focus();
 }
@@ -361,57 +413,40 @@ function setupDragDrop() {
     el.addEventListener('dragend',   onDragEnd);
   });
 }
-
-function onDragStart(e) {
-  dragSrcId = parseInt(this.dataset.id);
-  this.classList.add('dragging');
-  e.dataTransfer.effectAllowed = 'move';
-}
-function onDragOver(e) {
-  e.preventDefault();
-  e.dataTransfer.dropEffect = 'move';
-  this.classList.add('drag-over');
-}
-function onDragLeave() { this.classList.remove('drag-over'); }
+function onDragStart(e) { dragSrcId = parseInt(this.dataset.id); this.classList.add('dragging'); e.dataTransfer.effectAllowed = 'move'; }
+function onDragOver(e)  { e.preventDefault(); e.dataTransfer.dropEffect = 'move'; this.classList.add('drag-over'); }
+function onDragLeave()  { this.classList.remove('drag-over'); }
 function onDrop(e) {
-  e.stopPropagation();
-  this.classList.remove('drag-over');
+  e.stopPropagation(); this.classList.remove('drag-over');
   const targetId = parseInt(this.dataset.id);
   if (!dragSrcId || dragSrcId === targetId) return;
-  const srcIdx = items.findIndex(i => i.id === dragSrcId);
-  const tgtIdx = items.findIndex(i => i.id === targetId);
-  if (srcIdx === -1 || tgtIdx === -1) return;
-  const [moved] = items.splice(srcIdx, 1);
-  items.splice(tgtIdx, 0, moved);
+  const si = items.findIndex(i => i.id === dragSrcId);
+  const ti = items.findIndex(i => i.id === targetId);
+  if (si === -1 || ti === -1) return;
+  const [moved] = items.splice(si, 1);
+  items.splice(ti, 0, moved);
   saveItems();
 }
 function onDragEnd() {
-  document.querySelectorAll('.item').forEach(el =>
-    el.classList.remove('dragging', 'drag-over')
-  );
+  document.querySelectorAll('.item').forEach(el => el.classList.remove('dragging', 'drag-over'));
   dragSrcId = null;
 }
 
 // ── Рендер ─────────────────────────────────────────────────────────────────
 function render() {
-  // Если приложение ещё не показано — не рендерим список
   if (document.querySelector('.app').classList.contains('hidden')) return;
-
-  const container    = document.getElementById('list-container');
-  const statsText    = document.getElementById('stats-text');
-  const progressFill = document.getElementById('progress-fill');
 
   const done  = items.filter(i => i.done).length;
   const total = items.length;
-  statsText.textContent    = `${done} из ${total} куплено`;
-  progressFill.style.width = total ? `${(done / total) * 100}%` : '0%';
+  document.getElementById('stats-text').textContent    = `${done} из ${total} куплено`;
+  document.getElementById('progress-fill').style.width = total ? `${(done / total) * 100}%` : '0%';
 
-  // Azheka видит только свои; остальные — все
   let visible  = canSeeAll() ? items : items.filter(i => i.addedBy === currentUserId);
   let filtered = visible;
   if (currentFilter === 'active') filtered = visible.filter(i => !i.done);
   if (currentFilter === 'done')   filtered = visible.filter(i => i.done);
 
+  const container = document.getElementById('list-container');
   if (!filtered.length) {
     const msgs = {
       all:    { icon: '🛒', text: 'Список пуст — добавьте первый продукт!' },
@@ -420,6 +455,7 @@ function render() {
     };
     const m = msgs[currentFilter];
     container.innerHTML = `<div class="empty-state"><div class="icon">${m.icon}</div><p>${m.text}</p></div>`;
+    document.getElementById('footer-actions').style.display = isAdmin() ? 'flex' : 'none';
     return;
   }
 
@@ -433,39 +469,159 @@ function render() {
     <div class="category-group">
       <div class="category-header">${cat}</div>
       ${catItems.map(item => {
-        const author  = USERS.find(u => u.id === item.addedBy);
-        const canEdit = canManage(item);
+        const author = USERS.find(u => u.id === item.addedBy);
+        const cm     = canManage(item);
+        const priceStr = item.price ? `<span class="item-price">${(item.price * item.qty).toLocaleString('ru')} ₸</span>` : '';
         return `
           <div class="item ${item.done ? 'done' : ''}" data-id="${item.id}" draggable="true">
-            <div class="drag-handle" title="Перетащить">⠿</div>
+            <div class="drag-handle">⠿</div>
             <div class="item-check" onclick="toggleItem(${item.id})"></div>
             <div class="item-info">
               <div class="item-name">${esc(item.name)}</div>
               <div class="item-meta">
                 <span class="item-qty">${item.qty} ${item.unit || 'шт.'}</span>
+                ${priceStr}
                 ${author ? `<span class="item-author">${author.emoji} ${esc(author.name)}</span>` : ''}
               </div>
             </div>
             <div class="item-actions">
-              ${canEdit ? `<button class="item-edit"   onclick="openEdit(${item.id})"   title="Редактировать">✏️</button>` : ''}
-              ${canEdit ? `<button class="item-delete" onclick="deleteItem(${item.id})" title="Удалить">✕</button>` : ''}
+              ${cm ? `<button class="item-edit"   onclick="openEdit(${item.id})"   title="Редактировать">✏️</button>` : ''}
+              ${cm ? `<button class="item-delete" onclick="deleteItem(${item.id})" title="Удалить">✕</button>` : ''}
             </div>
-          </div>
-        `;
+          </div>`;
       }).join('')}
     </div>
   `).join('');
 
   setupDragDrop();
-  // Обновляем видимость admin-кнопок после render
   document.getElementById('footer-actions').style.display = isAdmin() ? 'flex' : 'none';
+}
+
+// ── Статистика ─────────────────────────────────────────────────────────────
+function openStats() {
+  renderStats();
+  document.getElementById('stats-modal').classList.remove('hidden');
+}
+
+function closeStats() {
+  document.getElementById('stats-modal').classList.add('hidden');
+}
+
+function setStatsPeriod(period, btn) {
+  statsPeriod = period;
+  document.querySelectorAll('.period-btn').forEach(b => b.classList.remove('active'));
+  btn.classList.add('active');
+  document.getElementById('custom-period').classList.toggle('hidden', period !== 'custom');
+  if (period !== 'custom') renderStats();
+}
+
+function renderStats() {
+  const now = Date.now();
+  let fromTs, toTs = now;
+
+  if (statsPeriod === 'today') {
+    fromTs = new Date().setHours(0, 0, 0, 0);
+  } else if (statsPeriod === 'week') {
+    fromTs = now - 7 * 864e5;
+  } else if (statsPeriod === 'month') {
+    fromTs = now - 30 * 864e5;
+  } else if (statsPeriod === 'year') {
+    fromTs = now - 365 * 864e5;
+  } else {
+    const df = document.getElementById('date-from').value;
+    const dt = document.getElementById('date-to').value;
+    if (!df || !dt) return;
+    fromTs = new Date(df).getTime();
+    toTs   = new Date(dt).getTime() + 864e5 - 1;
+  }
+
+  // Фильтр по времени
+  let entries = Object.values(historyData).filter(h =>
+    h.completedAt >= fromTs && h.completedAt <= toTs
+  );
+
+  // Фильтр по правам
+  if (!canSeeAll()) {
+    entries = entries.filter(h => h.addedBy === currentUserId);
+  }
+
+  const el = document.getElementById('stats-content');
+  if (!entries.length) {
+    el.innerHTML = `<div class="stats-empty">Нет данных за выбранный период</div>`;
+    return;
+  }
+
+  const totalCount = entries.length;
+  const totalSpend = entries.reduce((s, h) => s + (h.price ? h.price * h.qty : 0), 0);
+
+  // По категориям
+  const byCat = {};
+  entries.forEach(h => {
+    if (!byCat[h.category]) byCat[h.category] = { count: 0, spend: 0 };
+    byCat[h.category].count++;
+    byCat[h.category].spend += h.price ? h.price * h.qty : 0;
+  });
+
+  // По пользователям (если видно всех)
+  const byUser = {};
+  if (canSeeAll()) {
+    entries.forEach(h => {
+      const k = h.addedBy;
+      if (!byUser[k]) byUser[k] = { count: 0, spend: 0 };
+      byUser[k].count++;
+      byUser[k].spend += h.price ? h.price * h.qty : 0;
+    });
+  }
+
+  const fmt = n => n > 0 ? `${n.toLocaleString('ru')} ₸` : '—';
+
+  let html = `
+    <div class="stats-summary">
+      <div class="stats-card">
+        <div class="stats-value">${totalCount}</div>
+        <div class="stats-label">позиций куплено</div>
+      </div>
+      ${totalSpend > 0 ? `
+      <div class="stats-card accent">
+        <div class="stats-value">${fmt(totalSpend)}</div>
+        <div class="stats-label">потрачено</div>
+      </div>` : ''}
+    </div>
+
+    <div class="stats-section-title">По категориям</div>
+    <div class="stats-table">
+      ${Object.entries(byCat).map(([cat, d]) => `
+        <div class="stats-row">
+          <span class="stats-cat">${cat}</span>
+          <span class="stats-count">${d.count} поз.</span>
+          <span class="stats-spend">${fmt(d.spend)}</span>
+        </div>`).join('')}
+    </div>`;
+
+  if (canSeeAll() && Object.keys(byUser).length > 0) {
+    html += `
+    <div class="stats-section-title">По пользователям</div>
+    <div class="stats-table">
+      ${Object.entries(byUser).map(([uid, d]) => {
+        const u = USERS.find(u => u.id === parseInt(uid));
+        return u ? `
+        <div class="stats-row">
+          <span class="stats-cat">${u.emoji} ${esc(u.name)}</span>
+          <span class="stats-count">${d.count} поз.</span>
+          <span class="stats-spend">${fmt(d.spend)}</span>
+        </div>` : '';
+      }).join('')}
+    </div>`;
+  }
+
+  el.innerHTML = html;
 }
 
 // ── Вспомогательные ────────────────────────────────────────────────────────
 function esc(str) {
   return String(str)
-    .replace(/&/g, '&amp;').replace(/</g, '&lt;')
-    .replace(/>/g, '&gt;').replace(/"/g, '&quot;');
+    .replace(/&/g,'&amp;').replace(/</g,'&lt;')
+    .replace(/>/g,'&gt;').replace(/"/g,'&quot;');
 }
 
 // ── Клавиатура ─────────────────────────────────────────────────────────────
@@ -483,6 +639,9 @@ document.getElementById('edit-name').addEventListener('keydown', e => {
 });
 document.getElementById('edit-modal').addEventListener('click', e => {
   if (e.target === document.getElementById('edit-modal')) closeEdit();
+});
+document.getElementById('stats-modal').addEventListener('click', e => {
+  if (e.target === document.getElementById('stats-modal')) closeStats();
 });
 
 // ── Старт ──────────────────────────────────────────────────────────────────

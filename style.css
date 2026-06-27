@@ -389,7 +389,7 @@ main {
 
 .add-row2 {
   display: grid;
-  grid-template-columns: 65px 80px 1fr;
+  grid-template-columns: 58px 72px 80px 1fr;
   gap: 8px;
 }
 
@@ -462,7 +462,25 @@ input.error {
 .ac-item:hover { background: var(--bg); color: var(--primary); }
 
 /* ── Фильтры ───────────────────────────────────────────────────────── */
-.filters { display: flex; gap: 8px; }
+.filters-bar {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 8px;
+}
+.filters { display: flex; gap: 6px; flex-wrap: wrap; }
+
+.stats-open-btn {
+  background: var(--card);
+  border: 1.5px solid var(--border);
+  border-radius: 10px;
+  padding: 5px 10px;
+  font-size: 1rem;
+  cursor: pointer;
+  transition: all 0.2s;
+  flex-shrink: 0;
+}
+.stats-open-btn:hover { border-color: var(--primary); }
 
 .filter-btn {
   background: var(--card);
@@ -584,6 +602,12 @@ input.error {
   color: var(--muted);
 }
 
+.item-price {
+  font-size: 0.72rem;
+  color: var(--primary);
+  font-weight: 600;
+}
+
 .item-author {
   font-size: 0.68rem;
   color: var(--muted);
@@ -625,6 +649,28 @@ input.error {
 .empty-state .icon { font-size: 3rem; margin-bottom: 12px; }
 .empty-state p { font-size: 0.92rem; }
 
+/* ── Статистика ────────────────────────────────────────────────────── */
+.modal-wide { max-width: 520px; }
+.stats-periods { display: flex; gap: 6px; flex-wrap: wrap; margin-bottom: 10px; }
+.period-btn { background: var(--bg); border: 1.5px solid var(--border); border-radius: 20px; padding: 5px 12px; font-size: 0.8rem; cursor: pointer; color: var(--muted); transition: all 0.2s; }
+.period-btn.active { background: var(--primary); border-color: var(--primary); color: white; }
+.custom-period { display: flex; align-items: center; gap: 8px; margin-bottom: 12px; flex-wrap: wrap; }
+.custom-period input[type="date"] { padding: 7px 10px; font-size: 0.85rem; }
+.period-apply-btn { background: var(--primary); color: white; border: none; border-radius: 8px; padding: 7px 14px; font-size: 0.85rem; font-weight: 600; cursor: pointer; }
+.period-apply-btn:hover { background: var(--primary-dark); }
+.stats-summary { display: flex; gap: 10px; margin-bottom: 16px; }
+.stats-card { flex: 1; background: var(--bg); border-radius: 12px; padding: 12px 14px; text-align: center; }
+.stats-card.accent { background: rgba(0,180,200,0.1); }
+.stats-value { font-size: 1.3rem; font-weight: 700; color: var(--text); }
+.stats-label { font-size: 0.72rem; color: var(--muted); margin-top: 2px; }
+.stats-section-title { font-size: 0.75rem; font-weight: 700; text-transform: uppercase; letter-spacing: 0.05em; color: var(--muted); margin: 14px 0 8px; }
+.stats-table { display: flex; flex-direction: column; gap: 4px; }
+.stats-row { display: grid; grid-template-columns: 1fr auto auto; gap: 8px; align-items: center; background: var(--bg); border-radius: 8px; padding: 7px 10px; font-size: 0.84rem; }
+.stats-cat { color: var(--text); }
+.stats-count { color: var(--muted); font-size: 0.78rem; white-space: nowrap; }
+.stats-spend { color: var(--primary); font-weight: 600; white-space: nowrap; }
+.stats-empty { text-align: center; color: var(--muted); padding: 32px 0; font-size: 0.9rem; }
+
 /* ── Нижние кнопки ─────────────────────────────────────────────────── */
 .footer-actions {
   display: flex;
@@ -652,6 +698,6 @@ input.error {
 /* ── Мобильные ─────────────────────────────────────────────────────── */
 @media (max-width: 520px) {
   h1 { font-size: 1.2rem; }
-  .add-row2 { grid-template-columns: 60px 75px 1fr; }
+  .add-row2 { grid-template-columns: 50px 65px 70px 1fr; }
   .drag-handle { display: none; }
 }

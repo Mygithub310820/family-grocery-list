@@ -4,7 +4,7 @@
   <meta charset="UTF-8" />
   <meta name="viewport" content="width=device-width, initial-scale=1.0" />
   <title>Семейный список продуктов</title>
-  <link rel="stylesheet" href="style.css?v=7" />
+  <link rel="stylesheet" href="style.css?v=8" />
 </head>
 <body>
 
@@ -13,14 +13,10 @@
     <div class="login-card">
       <div class="login-logo">🛒</div>
       <h2 class="login-title">Семейный список</h2>
-
-      <!-- Шаг 1: выбор пользователя -->
       <div id="login-step1">
         <p class="login-sub">Выберите пользователя</p>
         <div id="user-list" class="user-list"></div>
       </div>
-
-      <!-- Шаг 2: ввод пароля -->
       <div id="login-step2" class="hidden">
         <div class="selected-user-info">
           <span id="sel-emoji"></span>
@@ -28,7 +24,7 @@
         </div>
         <div class="password-wrap">
           <input type="password" id="password-input" placeholder="Введите пароль..." />
-          <button class="eye-btn" onclick="togglePwdVisibility()" title="Показать/скрыть">👁</button>
+          <button class="eye-btn" onclick="togglePwdVisibility()">👁</button>
         </div>
         <div id="login-error" class="login-error hidden">Неверный пароль ❌</div>
         <div class="login-step2-btns">
@@ -39,7 +35,7 @@
     </div>
   </div>
 
-  <!-- Модалка редактирования продукта -->
+  <!-- Модалка редактирования -->
   <div id="edit-modal" class="modal-overlay hidden">
     <div class="modal">
       <div class="modal-header">
@@ -52,9 +48,34 @@
         <div class="edit-qty-row">
           <input type="number" id="edit-qty" min="1" value="1" onfocus="this.select()" />
           <select id="edit-unit"></select>
+          <input type="number" id="edit-price" placeholder="Цена ₸" min="0" step="1" onfocus="this.select()" />
         </div>
         <button class="save-edit-btn" onclick="saveEdit()">Сохранить</button>
       </div>
+    </div>
+  </div>
+
+  <!-- Модалка статистики -->
+  <div id="stats-modal" class="modal-overlay hidden">
+    <div class="modal modal-wide">
+      <div class="modal-header">
+        <h2>📊 Статистика покупок</h2>
+        <button class="modal-close" onclick="closeStats()">✕</button>
+      </div>
+      <div class="stats-periods">
+        <button class="period-btn active" onclick="setStatsPeriod('today', this)">Сегодня</button>
+        <button class="period-btn" onclick="setStatsPeriod('week', this)">7 дней</button>
+        <button class="period-btn" onclick="setStatsPeriod('month', this)">30 дней</button>
+        <button class="period-btn" onclick="setStatsPeriod('year', this)">Год</button>
+        <button class="period-btn" onclick="setStatsPeriod('custom', this)">Свой</button>
+      </div>
+      <div id="custom-period" class="custom-period hidden">
+        <input type="date" id="date-from" />
+        <span>—</span>
+        <input type="date" id="date-to" />
+        <button class="period-apply-btn" onclick="renderStats()">Показать</button>
+      </div>
+      <div id="stats-content"></div>
     </div>
   </div>
 
@@ -64,8 +85,8 @@
       <div class="header-content">
         <h1>🛒 Семейный список</h1>
         <div class="header-right">
-          <button class="dark-toggle" onclick="toggleDark()" title="Сменить тему">🌙</button>
-          <div class="current-user-chip" onclick="logout()" title="Выйти">
+          <button class="dark-toggle" onclick="toggleDark()">🌙</button>
+          <div class="current-user-chip" onclick="logout()">
             <span id="current-user-display"></span>
             <span class="logout-hint">↩</span>
           </div>
@@ -83,7 +104,7 @@
       <div class="add-section">
         <select id="category-select" onchange="updatePopular()"></select>
         <select id="popular-select" onchange="pickPopular()">
-          <option value="">— выбрать из списка —</option>
+          <option value="">-- выбрать из списка:</option>
         </select>
         <div class="input-wrap hidden" id="manual-wrap">
           <input type="text" id="item-input" placeholder="Введите название..." autocomplete="off" />
@@ -92,14 +113,18 @@
         <div class="add-row2">
           <input type="number" id="qty-input" placeholder="Кол-во" min="1" value="1" onfocus="this.select()" />
           <select id="unit-select"></select>
+          <input type="number" id="price-input" placeholder="Цена ₸" min="0" step="1" onfocus="this.select()" />
           <button id="add-btn" onclick="addItem()">＋ Добавить</button>
         </div>
       </div>
 
-      <div class="filters">
-        <button class="filter-btn active" onclick="setFilter('all', this)">Все</button>
-        <button class="filter-btn" onclick="setFilter('active', this)">Не куплено</button>
-        <button class="filter-btn" onclick="setFilter('done', this)">Куплено</button>
+      <div class="filters-bar">
+        <div class="filters">
+          <button class="filter-btn active" onclick="setFilter('all', this)">Все</button>
+          <button class="filter-btn" onclick="setFilter('active', this)">Не куплено</button>
+          <button class="filter-btn" onclick="setFilter('done', this)">Куплено</button>
+        </div>
+        <button class="stats-open-btn" onclick="openStats()" title="Статистика">📊</button>
       </div>
 
       <div id="list-container"></div>
@@ -111,10 +136,8 @@
     </main>
   </div>
 
-  <!-- Firebase SDK -->
   <script src="https://www.gstatic.com/firebasejs/9.23.0/firebase-app-compat.js"></script>
   <script src="https://www.gstatic.com/firebasejs/9.23.0/firebase-database-compat.js"></script>
-
-  <script src="app.js?v=5"></script>
+  <script src="app.js?v=8"></script>
 </body>
 </html>
