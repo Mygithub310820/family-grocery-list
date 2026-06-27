@@ -4,7 +4,7 @@
   <meta charset="UTF-8" />
   <meta name="viewport" content="width=device-width, initial-scale=1.0" />
   <title>Семейный список продуктов</title>
-  <link rel="stylesheet" href="style.css?v=4" />
+  <link rel="stylesheet" href="style.css?v=6" />
 </head>
 <body>
 
@@ -50,7 +50,7 @@
         <input type="text" id="edit-name" placeholder="Название продукта" />
         <select id="edit-category"></select>
         <div class="edit-qty-row">
-          <input type="number" id="edit-qty" min="1" value="1" />
+          <input type="number" id="edit-qty" min="1" value="1" onfocus="this.select()" />
           <select id="edit-unit"></select>
         </div>
         <button class="save-edit-btn" onclick="saveEdit()">Сохранить</button>
@@ -90,7 +90,7 @@
           <div id="autocomplete-list" class="autocomplete-list hidden"></div>
         </div>
         <div class="add-row2">
-          <input type="number" id="qty-input" placeholder="Кол-во" min="1" value="1" />
+          <input type="number" id="qty-input" placeholder="Кол-во" min="1" value="1" onfocus="this.select()" />
           <select id="unit-select"></select>
           <button id="add-btn" onclick="addItem()">+ Добавить</button>
         </div>
