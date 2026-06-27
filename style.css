@@ -573,13 +573,13 @@ input.error {
 }
 
 .category-header {
-  padding: 6px 12px;
-  font-size: 0.75rem;
-  font-weight: 700;
+  padding: 7px 12px;
+  font-size: 0.82rem;
+  font-weight: 800;
   text-transform: uppercase;
-  letter-spacing: 0.06em;
-  color: var(--muted);
-  background: var(--bg);
+  letter-spacing: 0.07em;
+  color: var(--primary);
+  background: linear-gradient(90deg, rgba(0,180,200,0.10) 0%, transparent 100%);
   border-bottom: 1px solid var(--border);
 }
 
