@@ -39,6 +39,19 @@ const POPULAR = {
   '❓ Другое':         [],
 };
 
+// ── CSS-классы категорий ───────────────────────────────────────────────────
+const CAT_CLASSES = {
+  '🥬 Овощи и фрукты': 'cat-green',
+  '🥩 Мясо и рыба':    'cat-red',
+  '🥛 Молочное':       'cat-blue',
+  '🍞 Хлеб и выпечка': 'cat-amber',
+  '🧴 Бытовая химия':  'cat-purple',
+  '🥫 Бакалея':        'cat-brown',
+  '🍬 Сладости':       'cat-pink',
+  '🧃 Напитки':        'cat-cyan',
+  '❓ Другое':         'cat-grey',
+};
+
 // ── Состояние ──────────────────────────────────────────────────────────────
 let items         = [];
 let historyData   = {};
@@ -521,9 +534,17 @@ function render() {
     groups[item.category].push(item);
   });
 
-  container.innerHTML = Object.entries(groups).map(([cat, catItems]) => `
+  container.innerHTML = Object.entries(groups).map(([cat, catItems]) => {
+    const m       = cat.match(/^(\S+)\s(.+)$/);
+    const emoji   = m ? m[1] : '📦';
+    const catName = m ? m[2] : cat;
+    const cls     = CAT_CLASSES[cat] || 'cat-grey';
+    return `
     <div class="category-group">
-      <div class="category-header">${cat}</div>
+      <div class="category-header ${cls}">
+        <span class="cat-emoji">${emoji}</span>
+        <span class="cat-name">${catName}</span>
+      </div>
       ${catItems.map(item => {
         const author   = USERS.find(u => u.id === item.addedBy);
         const cm       = canManage(item);
@@ -550,7 +571,7 @@ function render() {
           </div>`;
       }).join('')}
     </div>
-  `).join('');
+  `;}).join('');
 
   setupDragDrop();
   document.getElementById('footer-actions').style.display = isAdmin() ? 'flex' : 'none';
