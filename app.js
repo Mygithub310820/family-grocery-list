@@ -772,7 +772,7 @@ function renderStats() {
   // Секция "По категориям"
   const catSlices = Object.entries(byCat).map(([cat, d]) => ({ label: cat, count: d.count, spend: d.spend }));
   const catRows   = Object.entries(byCat).map(([cat, d]) => {
-    const catEntries = entries.filter(h => h.category === cat);
+    const catEntries = entries.filter(h => normCat(h.category) === cat);
     const detailHtml = `<div class="stats-detail-table">${
       catEntries.map(h => {
         const buyer = USERS.find(u => u.id === h.addedBy);
