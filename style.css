@@ -651,8 +651,13 @@ input.error {
 /* ── Мобильные ─────────────────────────────────────────────────────── */
 @media (max-width: 520px) {
   h1 { font-size: 1.2rem; }
-  .add-row2 { grid-template-columns: 1fr 60px; }
-  #unit-select { display: none; }
+  .add-row2 {
+    grid-template-columns: 1fr 1fr;
+    gap: 8px;
+  }
+  #category-select { grid-column: 1 / -1; }
+  #qty-input  { width: 100%; }
+  #unit-select { width: 100%; }
   #add-btn { grid-column: 1 / -1; }
   .drag-handle { display: none; }
 }
