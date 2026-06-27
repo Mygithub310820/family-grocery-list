@@ -705,6 +705,9 @@ input.error {
 .stats-cat { color: var(--text); }
 .stats-count { color: var(--muted); font-size: 0.78rem; white-space: nowrap; }
 .stats-spend { color: var(--primary); font-weight: 600; white-space: nowrap; }
+.stats-row-total { border-top: 1.5px solid var(--border); margin-top: 2px; font-weight: 700; }
+.stats-row-total .stats-cat { color: var(--primary); }
+.stats-row-total .stats-count { color: var(--text); font-weight: 700; }
 .stats-empty { text-align: center; color: var(--muted); padding: 32px 0; font-size: 0.9rem; }
 
 /* ── Нижние кнопки ─────────────────────────────────────────────────── */
