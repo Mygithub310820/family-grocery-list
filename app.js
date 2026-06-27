@@ -18,7 +18,7 @@ const USERS = [
   { id: 5, name: 'Dauka',  emoji: '👦', role: 'user',  password: 'NaglMurs',  seeAll: true  },
 ];
 
-// ── Категории и популярные товары ──────────────────────────────────────────
+// ── Категории, единицы, популярные товары ──────────────────────────────────
 const CATEGORIES = [
   '🥬 Овощи и фрукты', '🥩 Мясо и рыба', '🥛 Молочное',
   '🍞 Хлеб и выпечка', '🧴 Бытовая химия', '🥫 Бакалея',
@@ -26,22 +26,23 @@ const CATEGORIES = [
 ];
 const UNITS = ['шт.', 'кг', 'г', 'л', 'мл', 'упак.', 'пач.'];
 
+// '---' — разделитель (пунктирная линия)
 const POPULAR = {
-  '🥬 Овощи и фрукты': ['Апельсины', 'Бананы', 'Капуста', 'Картофель', 'Лук', 'Морковь', 'Огурцы', 'Перец болгарский', 'Помидоры', 'Чеснок', 'Яблоки'],
-  '🥩 Мясо и рыба':    ['Баранина', 'Говядина', 'Жая', 'Казы', 'Карта', 'Колбаса', 'Креветки', 'Курица', 'Лосось', 'Субпродукты', 'Фарш'],
-  '🥛 Молочное':       ['Масло сливочное', 'Молоко', 'Сливки', 'Сметана', 'Соевый сомоком', 'Творог', 'Яйца', 'Cheese Sveza', 'Halloumi', 'Stracciatella', 'Сыр'],
-  '🍞 Хлеб и выпечка': ['Багет', 'Батон', 'Булочки', 'Круассаны', 'Лаваш', 'Пита', 'Слойки', 'Тосты', 'Хлеб белый', 'Хлеб чёрный', 'Хлебцы'],
-  '🧴 Бытовая химия':  ['Гель для душа', 'Губки для посуды', 'Зубная паста', 'Кондиционер для белья', 'Мыло', 'Освежитель воздуха', 'Порошок стиральный', 'Салфетки', 'Средство для посуды', 'Туалетная бумага', 'Шампунь'],
-  '🥫 Бакалея':        ['Геркулес', 'Гречка', 'Консервы рыбные', 'Макароны', 'Мука', 'Подсолнечное масло', 'Рис', 'Соль', 'Сахар', 'Тушёнка', 'Чечевица'],
-  '🍬 Сладости':       ['Вафли', 'Зефир', 'Карамель', 'Конфеты', 'Мармелад', 'Пастила', 'Печенье', 'Пряники', 'Торт', 'Халва', 'Шоколад'],
-  '🧃 Напитки':        ['Вода питьевая', 'Газировка', 'Какао', 'Квас', 'Кофе', 'Компот', 'Лимонад', 'Морс', 'Сок', 'Чай', 'Энергетик'],
+  '🥬 Овощи и фрукты': ['Апельсины','Бананы','Капуста','Картофель','Лук','Морковь','Огурцы','Перец болгарский','Помидоры','Чеснок','Яблоки'],
+  '🥩 Мясо и рыба':    ['Баранина','Говядина','Жая','Казы','Карта','Колбаса','Креветки','Курица','Лосось','Субпродукты','Фарш'],
+  '🥛 Молочное':       ['Масло сливочное','Молоко','Сливки','Сметана','Соевый сомоком','Творог','Яйца','---','Burrata','Cheese Sveza','Halloumi','Stracciatella'],
+  '🍞 Хлеб и выпечка': ['Багет','Батон','Булочки','Круассаны','Лаваш','Пита','Слойки','Тосты','Хлеб белый','Хлеб чёрный','Хлебцы'],
+  '🧴 Бытовая химия':  ['Гель для душа','Губки для посуды','Зубная паста','Кондиционер для белья','Мыло','Освежитель воздуха','Порошок стиральный','Салфетки','Средство для посуды','Туалетная бумага','Шампунь'],
+  '🥫 Бакалея':        ['Геркулес','Гречка','Консервы рыбные','Макароны','Мука','Подсолнечное масло','Рис','Соль','Сахар','Тушёнка','Чечевица'],
+  '🍬 Сладости':       ['Вафли','Зефир','Карамель','Конфеты','Мармелад','Пастила','Печенье','Пряники','Торт','Халва','Шоколад'],
+  '🧃 Напитки':        ['Вода питьевая','Газировка','Какао','Квас','Кофе','Компот','Лимонад','Морс','Сок','Чай','Энергетик'],
   '❓ Другое':         [],
 };
 
 // ── Состояние ──────────────────────────────────────────────────────────────
 let items         = [];
-let historyData   = {};   // {itemId: {name,qty,unit,price,category,addedBy,completedAt}}
-let prices        = {};   // {priceKey: price}
+let historyData   = {};
+let prices        = {};
 let itemHistory   = JSON.parse(localStorage.getItem('grocery-history') || '[]');
 let currentUserId = JSON.parse(localStorage.getItem('grocery-session') || 'null');
 let darkMode      = localStorage.getItem('grocery-dark') === 'true';
@@ -50,6 +51,7 @@ let editingId     = null;
 let dragSrcId     = null;
 let selectedUserId = null;
 let statsPeriod   = 'today';
+let pendingDoneId = null;   // id товара ожидающего подтверждения цены
 
 let dbRef, historyRef, pricesRef;
 
@@ -66,14 +68,8 @@ function initFirebase() {
     items.sort((a, b) => (a.order || 0) - (b.order || 0));
     render();
   });
-
-  historyRef.on('value', snapshot => {
-    historyData = snapshot.val() || {};
-  });
-
-  pricesRef.on('value', snapshot => {
-    prices = snapshot.val() || {};
-  });
+  historyRef.on('value', snapshot => { historyData = snapshot.val() || {}; });
+  pricesRef.on('value',  snapshot => { prices      = snapshot.val() || {}; });
 }
 
 function priceKey(name) {
@@ -179,9 +175,9 @@ function showApp() {
   updateUserDisplay();
 }
 
-function me()        { return USERS.find(u => u.id === currentUserId); }
-function isAdmin()   { const u = me(); return u && u.role === 'admin'; }
-function canSeeAll() { const u = me(); return u && (u.role === 'admin' || u.seeAll); }
+function me()            { return USERS.find(u => u.id === currentUserId); }
+function isAdmin()       { const u = me(); return u && u.role === 'admin'; }
+function canSeeAll()     { const u = me(); return u && (u.role === 'admin' || u.seeAll); }
 function canManage(item) { return isAdmin() || item.addedBy === currentUserId; }
 
 function updateUserDisplay() {
@@ -199,38 +195,41 @@ function toggleDark() {
   document.querySelector('.dark-toggle').textContent = darkMode ? '☀️' : '🌙';
 }
 
-// ── Популярные товары ──────────────────────────────────────────────────────
+// ── Популярные товары (кнопки-чипы) ───────────────────────────────────────
 function updatePopular() {
   const cat     = document.getElementById('category-select').value;
   const popular = POPULAR[cat] || [];
-  const sel     = document.getElementById('popular-select');
-  sel.innerHTML = `<option value="">-- выбрать из списка:</option>`
-    + popular.map(p => `<option value="${esc(p)}">${p}</option>`).join('')
-    + `<option value="__manual__">✏️ Ввести вручную...</option>`;
+  const container = document.getElementById('popular-items');
+
+  container.innerHTML = popular.map(p => {
+    if (p === '---') return '<div class="popular-separator"></div>';
+    return `<button class="popular-btn" data-name="${esc(p)}" onclick="pickPopularBtn(this)">${esc(p)}</button>`;
+  }).join('')
+  + `<button class="popular-btn manual-btn" onclick="pickManual()">✏️ Вручную</button>`;
+
+  // Сброс
   document.getElementById('item-input').value  = '';
   document.getElementById('price-input').value = '';
   document.getElementById('manual-wrap').classList.add('hidden');
   hideAutocomplete();
 }
 
-function pickPopular() {
-  const val    = document.getElementById('popular-select').value;
-  const manual = document.getElementById('manual-wrap');
-  const input  = document.getElementById('item-input');
-  if (val === '__manual__') {
-    manual.classList.remove('hidden');
-    input.value = '';
-    document.getElementById('price-input').value = '';
-    setTimeout(() => input.focus(), 50);
-  } else if (val) {
-    manual.classList.add('hidden');
-    input.value = val;
-    fillPrice(val);
-  } else {
-    manual.classList.add('hidden');
-    input.value = '';
-    document.getElementById('price-input').value = '';
-  }
+function pickPopularBtn(btn) {
+  document.querySelectorAll('.popular-btn').forEach(b => b.classList.remove('selected'));
+  btn.classList.add('selected');
+  const name = btn.dataset.name;
+  document.getElementById('item-input').value = name;
+  document.getElementById('manual-wrap').classList.add('hidden');
+  fillPrice(name);
+}
+
+function pickManual() {
+  document.querySelectorAll('.popular-btn').forEach(b => b.classList.remove('selected'));
+  document.querySelector('.manual-btn').classList.add('selected');
+  document.getElementById('manual-wrap').classList.remove('hidden');
+  document.getElementById('item-input').value  = '';
+  document.getElementById('price-input').value = '';
+  setTimeout(() => document.getElementById('item-input').focus(), 50);
 }
 
 function fillPrice(name) {
@@ -240,34 +239,36 @@ function fillPrice(name) {
 
 // ── CRUD продуктов ─────────────────────────────────────────────────────────
 function addItem() {
-  const nameInput  = document.getElementById('item-input');
-  const popSel     = document.getElementById('popular-select');
-  // Имя берём из ручного поля или из популярного выбора
-  const name = nameInput.value.trim() || (popSel.value && popSel.value !== '__manual__' ? popSel.value : '');
+  const nameInput = document.getElementById('item-input');
+  const name      = nameInput.value.trim();
   if (!name) {
-    nameInput.classList.add('error');
-    setTimeout(() => nameInput.classList.remove('error'), 800);
-    return;
+    // Проверим что хоть что-то выбрано из чипов
+    const selectedBtn = document.querySelector('.popular-btn.selected:not(.manual-btn)');
+    if (!selectedBtn) {
+      nameInput.classList.add('error');
+      setTimeout(() => nameInput.classList.remove('error'), 800);
+      return;
+    }
   }
+  const finalName = name || document.querySelector('.popular-btn.selected')?.dataset?.name || '';
+  if (!finalName) return;
+
   const category = document.getElementById('category-select').value;
   const qty      = parseInt(document.getElementById('qty-input').value) || 1;
   const unit     = document.getElementById('unit-select').value;
   const priceVal = parseFloat(document.getElementById('price-input').value) || null;
   const id       = Date.now();
 
-  // Запоминаем цену
-  if (priceVal) pricesRef.child(priceKey(name)).set(priceVal);
+  if (priceVal) pricesRef.child(priceKey(finalName)).set(priceVal);
 
   dbRef.child(String(id)).set({
-    id, name, category, qty, unit,
-    price: priceVal,
-    done: false,
-    addedBy: currentUserId,
-    order: items.length,
+    id, name: finalName, category, qty, unit,
+    price: priceVal, done: false,
+    addedBy: currentUserId, order: items.length,
   });
 
-  if (!itemHistory.includes(name)) {
-    itemHistory.unshift(name);
+  if (!itemHistory.includes(finalName)) {
+    itemHistory.unshift(finalName);
     if (itemHistory.length > 100) itemHistory.pop();
     localStorage.setItem('grocery-history', JSON.stringify(itemHistory));
   }
@@ -276,33 +277,67 @@ function addItem() {
   nameInput.value = '';
   document.getElementById('qty-input').value    = '1';
   document.getElementById('price-input').value  = '';
-  document.getElementById('popular-select').value = '';
+  document.querySelectorAll('.popular-btn').forEach(b => b.classList.remove('selected'));
   document.getElementById('manual-wrap').classList.add('hidden');
   hideAutocomplete();
 }
 
+// ── Отметка куплено / запрос цены ─────────────────────────────────────────
 function toggleItem(id) {
   const item = items.find(i => i.id === id);
   if (!item) return;
-  const nowDone = !item.done;
-  dbRef.child(String(id)).update({ done: nowDone });
 
-  if (nowDone) {
-    // Сохраняем в историю покупок
-    historyRef.child(String(id)).set({
-      itemId:      id,
-      name:        item.name,
-      category:    item.category,
-      qty:         item.qty,
-      unit:        item.unit || 'шт.',
-      price:       item.price || null,
-      addedBy:     item.addedBy,
-      completedAt: Date.now(),
-    });
-  } else {
-    // Отменяем покупку — убираем из истории
+  if (item.done) {
+    // Снимаем отметку
+    dbRef.child(String(id)).update({ done: false });
     historyRef.child(String(id)).remove();
+    return;
   }
+
+  // Отмечаем куплено
+  if (!item.price) {
+    // Нет цены — спросить
+    pendingDoneId = id;
+    document.getElementById('price-prompt-name').textContent = item.name;
+    document.getElementById('price-prompt-input').value = '';
+    document.getElementById('price-prompt').classList.remove('hidden');
+    setTimeout(() => document.getElementById('price-prompt-input').focus(), 50);
+  } else {
+    markItemDone(id, item.price);
+  }
+}
+
+function skipPrice() {
+  document.getElementById('price-prompt').classList.add('hidden');
+  if (pendingDoneId !== null) markItemDone(pendingDoneId, null);
+  pendingDoneId = null;
+}
+
+function confirmPrice() {
+  const priceVal = parseFloat(document.getElementById('price-prompt-input').value) || null;
+  document.getElementById('price-prompt').classList.add('hidden');
+  if (pendingDoneId !== null) {
+    const item = items.find(i => i.id === pendingDoneId);
+    if (item && priceVal) {
+      pricesRef.child(priceKey(item.name)).set(priceVal);
+      dbRef.child(String(pendingDoneId)).update({ price: priceVal });
+    }
+    markItemDone(pendingDoneId, priceVal);
+  }
+  pendingDoneId = null;
+}
+
+function markItemDone(id, price) {
+  const item = items.find(i => i.id === id);
+  if (!item) return;
+  const effectivePrice = price !== undefined ? price : (item.price || null);
+  dbRef.child(String(id)).update({ done: true });
+  historyRef.child(String(id)).set({
+    itemId: id, name: item.name, category: item.category,
+    qty: item.qty, unit: item.unit || 'шт.',
+    price: effectivePrice,
+    addedBy: item.addedBy, completedAt: Date.now(),
+  });
 }
 
 function deleteItem(id) {
@@ -310,24 +345,23 @@ function deleteItem(id) {
   if (!item) return;
   if (!canManage(item)) { alert('Вы можете удалять только свои продукты'); return; }
   dbRef.child(String(id)).remove();
-  // Если был помечен куплено и вручную удалили — убираем из истории
   if (item.done) historyRef.child(String(id)).remove();
 }
 
 function clearDone() {
   if (!items.some(i => i.done)) return;
-  if (!confirm('Удалить все купленные из списка?\n(История покупок сохранится)')) return;
+  if (!confirm('Удалить купленные из списка?\n(История покупок сохранится)')) return;
   const updates = {};
   items.filter(i => i.done).forEach(i => { updates[String(i.id)] = null; });
   dbRef.update(updates);
-  // История НЕ очищается — это записи о покупках
+  // История НЕ очищается
 }
 
 function clearAll() {
   if (!items.length) return;
   if (!confirm('Очистить весь список?\n(История покупок сохранится)')) return;
-  items.filter(i => i.done).forEach(i => historyRef.child(String(i.id)).remove());
   dbRef.set(null);
+  // История НЕ очищается
 }
 
 // ── Редактирование ─────────────────────────────────────────────────────────
@@ -357,11 +391,10 @@ function saveEdit() {
   const priceVal = parseFloat(document.getElementById('edit-price').value) || null;
   if (priceVal) pricesRef.child(priceKey(name)).set(priceVal);
   dbRef.child(String(editingId)).update({
-    name,
-    category: document.getElementById('edit-category').value,
-    qty:      parseInt(document.getElementById('edit-qty').value) || 1,
-    unit:     document.getElementById('edit-unit').value,
-    price:    priceVal,
+    name, category: document.getElementById('edit-category').value,
+    qty:  parseInt(document.getElementById('edit-qty').value) || 1,
+    unit: document.getElementById('edit-unit').value,
+    price: priceVal,
   });
   closeEdit();
 }
@@ -414,15 +447,13 @@ function setupDragDrop() {
   });
 }
 function onDragStart(e) { dragSrcId = parseInt(this.dataset.id); this.classList.add('dragging'); e.dataTransfer.effectAllowed = 'move'; }
-function onDragOver(e)  { e.preventDefault(); e.dataTransfer.dropEffect = 'move'; this.classList.add('drag-over'); }
+function onDragOver(e)  { e.preventDefault(); this.classList.add('drag-over'); }
 function onDragLeave()  { this.classList.remove('drag-over'); }
 function onDrop(e) {
   e.stopPropagation(); this.classList.remove('drag-over');
-  const targetId = parseInt(this.dataset.id);
-  if (!dragSrcId || dragSrcId === targetId) return;
+  const ti = items.findIndex(i => i.id === parseInt(this.dataset.id));
   const si = items.findIndex(i => i.id === dragSrcId);
-  const ti = items.findIndex(i => i.id === targetId);
-  if (si === -1 || ti === -1) return;
+  if (si === -1 || ti === -1 || si === ti) return;
   const [moved] = items.splice(si, 1);
   items.splice(ti, 0, moved);
   saveItems();
@@ -469,9 +500,10 @@ function render() {
     <div class="category-group">
       <div class="category-header">${cat}</div>
       ${catItems.map(item => {
-        const author = USERS.find(u => u.id === item.addedBy);
-        const cm     = canManage(item);
-        const priceStr = item.price ? `<span class="item-price">${(item.price * item.qty).toLocaleString('ru')} ₸</span>` : '';
+        const author   = USERS.find(u => u.id === item.addedBy);
+        const cm       = canManage(item);
+        const priceStr = item.price
+          ? `<span class="item-price">${(item.price * item.qty).toLocaleString('ru')} ₸</span>` : '';
         return `
           <div class="item ${item.done ? 'done' : ''}" data-id="${item.id}" draggable="true">
             <div class="drag-handle">⠿</div>
@@ -498,14 +530,8 @@ function render() {
 }
 
 // ── Статистика ─────────────────────────────────────────────────────────────
-function openStats() {
-  renderStats();
-  document.getElementById('stats-modal').classList.remove('hidden');
-}
-
-function closeStats() {
-  document.getElementById('stats-modal').classList.add('hidden');
-}
+function openStats()  { renderStats(); document.getElementById('stats-modal').classList.remove('hidden'); }
+function closeStats() { document.getElementById('stats-modal').classList.add('hidden'); }
 
 function setStatsPeriod(period, btn) {
   statsPeriod = period;
@@ -518,16 +544,11 @@ function setStatsPeriod(period, btn) {
 function renderStats() {
   const now = Date.now();
   let fromTs, toTs = now;
-
-  if (statsPeriod === 'today') {
-    fromTs = new Date().setHours(0, 0, 0, 0);
-  } else if (statsPeriod === 'week') {
-    fromTs = now - 7 * 864e5;
-  } else if (statsPeriod === 'month') {
-    fromTs = now - 30 * 864e5;
-  } else if (statsPeriod === 'year') {
-    fromTs = now - 365 * 864e5;
-  } else {
+  if      (statsPeriod === 'today') { fromTs = new Date().setHours(0,0,0,0); }
+  else if (statsPeriod === 'week')  { fromTs = now - 7   * 864e5; }
+  else if (statsPeriod === 'month') { fromTs = now - 30  * 864e5; }
+  else if (statsPeriod === 'year')  { fromTs = now - 365 * 864e5; }
+  else {
     const df = document.getElementById('date-from').value;
     const dt = document.getElementById('date-to').value;
     if (!df || !dt) return;
@@ -535,15 +556,10 @@ function renderStats() {
     toTs   = new Date(dt).getTime() + 864e5 - 1;
   }
 
-  // Фильтр по времени
   let entries = Object.values(historyData).filter(h =>
     h.completedAt >= fromTs && h.completedAt <= toTs
   );
-
-  // Фильтр по правам
-  if (!canSeeAll()) {
-    entries = entries.filter(h => h.addedBy === currentUserId);
-  }
+  if (!canSeeAll()) entries = entries.filter(h => h.addedBy === currentUserId);
 
   const el = document.getElementById('stats-content');
   if (!entries.length) {
@@ -553,6 +569,16 @@ function renderStats() {
 
   const totalCount = entries.length;
   const totalSpend = entries.reduce((s, h) => s + (h.price ? h.price * h.qty : 0), 0);
+  const fmt = n => n > 0 ? `${n.toLocaleString('ru')} ₸` : '—';
+
+  // По пользователям
+  const byUser = {};
+  entries.forEach(h => {
+    const k = h.addedBy;
+    if (!byUser[k]) byUser[k] = { count: 0, spend: 0 };
+    byUser[k].count++;
+    byUser[k].spend += h.price ? h.price * h.qty : 0;
+  });
 
   // По категориям
   const byCat = {};
@@ -561,19 +587,6 @@ function renderStats() {
     byCat[h.category].count++;
     byCat[h.category].spend += h.price ? h.price * h.qty : 0;
   });
-
-  // По пользователям (если видно всех)
-  const byUser = {};
-  if (canSeeAll()) {
-    entries.forEach(h => {
-      const k = h.addedBy;
-      if (!byUser[k]) byUser[k] = { count: 0, spend: 0 };
-      byUser[k].count++;
-      byUser[k].spend += h.price ? h.price * h.qty : 0;
-    });
-  }
-
-  const fmt = n => n > 0 ? `${n.toLocaleString('ru')} ₸` : '—';
 
   let html = `
     <div class="stats-summary">
@@ -586,9 +599,24 @@ function renderStats() {
         <div class="stats-value">${fmt(totalSpend)}</div>
         <div class="stats-label">потрачено</div>
       </div>` : ''}
-    </div>
+    </div>`;
 
-    <div class="stats-section-title">По категориям</div>
+  // Покупатели — первым разделом
+  if (canSeeAll() && Object.keys(byUser).length > 0) {
+    html += `<div class="stats-section-title">По покупателям</div>
+    <div class="stats-table">
+      ${Object.entries(byUser).map(([uid, d]) => {
+        const u = USERS.find(u => u.id === parseInt(uid));
+        return u ? `<div class="stats-row">
+          <span class="stats-cat">${u.emoji} ${esc(u.name)}</span>
+          <span class="stats-count">${d.count} поз.</span>
+          <span class="stats-spend">${fmt(d.spend)}</span>
+        </div>` : '';
+      }).join('')}
+    </div>`;
+  }
+
+  html += `<div class="stats-section-title">По категориям</div>
     <div class="stats-table">
       ${Object.entries(byCat).map(([cat, d]) => `
         <div class="stats-row">
@@ -597,22 +625,6 @@ function renderStats() {
           <span class="stats-spend">${fmt(d.spend)}</span>
         </div>`).join('')}
     </div>`;
-
-  if (canSeeAll() && Object.keys(byUser).length > 0) {
-    html += `
-    <div class="stats-section-title">По пользователям</div>
-    <div class="stats-table">
-      ${Object.entries(byUser).map(([uid, d]) => {
-        const u = USERS.find(u => u.id === parseInt(uid));
-        return u ? `
-        <div class="stats-row">
-          <span class="stats-cat">${u.emoji} ${esc(u.name)}</span>
-          <span class="stats-count">${d.count} поз.</span>
-          <span class="stats-spend">${fmt(d.spend)}</span>
-        </div>` : '';
-      }).join('')}
-    </div>`;
-  }
 
   el.innerHTML = html;
 }
@@ -637,11 +649,18 @@ document.getElementById('edit-name').addEventListener('keydown', e => {
   if (e.key === 'Enter') saveEdit();
   if (e.key === 'Escape') closeEdit();
 });
+document.getElementById('price-prompt-input').addEventListener('keydown', e => {
+  if (e.key === 'Enter') confirmPrice();
+  if (e.key === 'Escape') skipPrice();
+});
 document.getElementById('edit-modal').addEventListener('click', e => {
   if (e.target === document.getElementById('edit-modal')) closeEdit();
 });
 document.getElementById('stats-modal').addEventListener('click', e => {
   if (e.target === document.getElementById('stats-modal')) closeStats();
+});
+document.getElementById('price-prompt').addEventListener('click', e => {
+  if (e.target === document.getElementById('price-prompt')) skipPrice();
 });
 
 // ── Старт ──────────────────────────────────────────────────────────────────

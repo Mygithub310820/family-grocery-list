@@ -436,6 +436,42 @@ input.error {
 #add-btn:hover { background: var(--primary-dark); }
 #add-btn:active { transform: scale(0.97); }
 
+/* ── Популярные товары (чипы) ──────────────────────────────────────── */
+.popular-items {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 6px;
+}
+
+.popular-btn {
+  background: var(--bg);
+  border: 1.5px solid var(--border);
+  border-radius: 20px;
+  padding: 5px 12px;
+  font-size: 0.8rem;
+  cursor: pointer;
+  color: var(--text);
+  transition: all 0.15s;
+  white-space: nowrap;
+}
+.popular-btn:hover  { border-color: var(--primary); color: var(--primary); }
+.popular-btn.selected { background: var(--primary); border-color: var(--primary); color: white; }
+.manual-btn { color: var(--muted); border-style: dashed; }
+.manual-btn.selected { background: var(--muted); border-color: var(--muted); color: white; }
+
+.popular-separator {
+  width: 100%;
+  border: none;
+  border-top: 1.5px dashed var(--border);
+  margin: 2px 0;
+}
+
+/* Запрос цены */
+.price-prompt-modal { max-width: 320px; }
+.price-prompt-title { font-size: 1rem; font-weight: 700; margin-bottom: 6px; }
+.price-prompt-item  { font-size: 0.85rem; color: var(--muted); margin-bottom: 12px; }
+.price-prompt-btns  { display: grid; grid-template-columns: 1fr 1fr; gap: 10px; margin-top: 12px; }
+
 /* ── Автодополнение ────────────────────────────────────────────────── */
 .autocomplete-list {
   position: absolute;

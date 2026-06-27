@@ -4,7 +4,7 @@
   <meta charset="UTF-8" />
   <meta name="viewport" content="width=device-width, initial-scale=1.0" />
   <title>Семейный список продуктов</title>
-  <link rel="stylesheet" href="style.css?v=8" />
+  <link rel="stylesheet" href="style.css?v=9" />
 </head>
 <body>
 
@@ -51,6 +51,19 @@
           <input type="number" id="edit-price" placeholder="Цена ₸" min="0" step="1" onfocus="this.select()" />
         </div>
         <button class="save-edit-btn" onclick="saveEdit()">Сохранить</button>
+      </div>
+    </div>
+  </div>
+
+  <!-- Запрос цены при отметке куплено -->
+  <div id="price-prompt" class="modal-overlay hidden">
+    <div class="modal price-prompt-modal">
+      <div class="price-prompt-title">💰 Введёте фактическую цену?</div>
+      <div class="price-prompt-item" id="price-prompt-name"></div>
+      <input type="number" id="price-prompt-input" placeholder="Цена в ₸" min="0" step="1" onfocus="this.select()" />
+      <div class="price-prompt-btns">
+        <button class="back-btn" onclick="skipPrice()">Пропустить</button>
+        <button class="login-btn" onclick="confirmPrice()">Сохранить</button>
       </div>
     </div>
   </div>
@@ -103,9 +116,9 @@
     <main>
       <div class="add-section">
         <select id="category-select" onchange="updatePopular()"></select>
-        <select id="popular-select" onchange="pickPopular()">
-          <option value="">-- выбрать из списка:</option>
-        </select>
+        <!-- Кнопки-чипы популярных товаров -->
+        <div id="popular-items" class="popular-items"></div>
+        <!-- Поле ручного ввода -->
         <div class="input-wrap hidden" id="manual-wrap">
           <input type="text" id="item-input" placeholder="Введите название..." autocomplete="off" />
           <div id="autocomplete-list" class="autocomplete-list hidden"></div>
@@ -138,6 +151,6 @@
 
   <script src="https://www.gstatic.com/firebasejs/9.23.0/firebase-app-compat.js"></script>
   <script src="https://www.gstatic.com/firebasejs/9.23.0/firebase-database-compat.js"></script>
-  <script src="app.js?v=8"></script>
+  <script src="app.js?v=9"></script>
 </body>
 </html>
