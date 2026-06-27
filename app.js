@@ -30,7 +30,7 @@ const UNITS = ['шт.', 'кг', 'г', 'л', 'мл', 'упак.', 'пач.'];
 const POPULAR = {
   '🥬 Овощи и фрукты': ['Апельсины','Бананы','Капуста','Картофель','Лук','Морковь','Огурцы','Перец болгарский','Помидоры','Чеснок','Яблоки'],
   '🥩 Мясо и рыба':    ['Баранина','Говядина','Жая','Қазы','Қарта','Колбаса','Креветки','Курица','Лосось','Субпродукты','Фарш'],
-  '🥛 Молочное':       ['Масло сливочное','Молоко','Сливки','Сметана','Соевый сомоком','Творог','Яйца','---','Burrata','Cheese Sveza','Halloumi','Stracciatella'],
+  '🥛 Молочное':       ['Масло сливочное','Сливки','Сметана','Соевый сомоком','Сомоком','Творог','Яйца','---','Burrata','Cheese Sveza','Halloumi','Stracciatella'],
   '🍞 Хлеб и выпечка': ['Багет','Батон','Булочки','Круассаны','Лаваш','Пита','Слойки','Тосты','Хлеб белый','Хлеб чёрный','Хлебцы'],
   '🧴 Бытовая химия':  ['Гель для душа','Губки для посуды','Зубная паста','Кондиционер для белья','Мыло','Освежитель воздуха','Порошок стиральный','Салфетки','Средство для посуды','Туалетная бумага','Шампунь'],
   '🥫 Бакалея':        ['Геркулес','Гречка','Ись','Макароны','Мука','Оливковое масло','Подсолнечное масло','Соль','Сахар','Чечевица красная','Чечевица коричневая'],
@@ -331,17 +331,20 @@ function confirmPrice() {
   if (pendingDoneId !== null) {
     const item = items.find(i => i.id === pendingDoneId);
     if (item) {
+      const actualQty = qtyVal || item.qty;
+      // priceVal — итоговая стоимость за все; вычисляем цену за единицу
+      const unitPrice = (priceVal && actualQty) ? +(priceVal / actualQty).toFixed(2) : null;
       const updates = { done: true };
-      if (priceVal)                      { updates.price = priceVal; pricesRef.child(priceKey(item.name)).set(priceVal); }
-      if (qtyVal  && qtyVal  !== item.qty)  updates.qty  = qtyVal;
-      if (unitVal && unitVal !== item.unit) updates.unit = unitVal;
+      if (unitPrice)                          { updates.price = unitPrice; pricesRef.child(priceKey(item.name)).set(unitPrice); }
+      if (qtyVal  && qtyVal  !== item.qty)      updates.qty  = qtyVal;
+      if (unitVal && unitVal !== item.unit)      updates.unit = unitVal;
       dbRef.child(String(pendingDoneId)).update(updates);
 
       historyRef.child(String(pendingDoneId)).set({
         itemId: item.id, name: item.name, category: item.category,
-        qty:   qtyVal  || item.qty,
+        qty:   actualQty,
         unit:  unitVal || item.unit || 'шт.',
-        price: priceVal || null,
+        price: unitPrice || null,
         addedBy: item.addedBy, completedAt: Date.now(),
       });
     }
