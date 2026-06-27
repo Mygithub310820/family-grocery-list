@@ -196,17 +196,27 @@ function updatePopular() {
   const popular = POPULAR[cat] || [];
   const sel     = document.getElementById('popular-select');
   sel.innerHTML = `<option value="">— выбрать из списка —</option>`
-    + popular.map(p => `<option value="${esc(p)}">${p}</option>`).join('');
-  // Сбрасываем текстовое поле
+    + popular.map(p => `<option value="${esc(p)}">${p}</option>`).join('')
+    + `<option value="__manual__">✏️ Ввести вручную...</option>`;
   document.getElementById('item-input').value = '';
+  document.getElementById('manual-wrap').classList.add('hidden');
   hideAutocomplete();
 }
 
 function pickPopular() {
-  const val = document.getElementById('popular-select').value;
-  if (val) {
-    document.getElementById('item-input').value = val;
-    hideAutocomplete();
+  const val     = document.getElementById('popular-select').value;
+  const manual  = document.getElementById('manual-wrap');
+  const input   = document.getElementById('item-input');
+  if (val === '__manual__') {
+    manual.classList.remove('hidden');
+    input.value = '';
+    setTimeout(() => input.focus(), 50);
+  } else if (val) {
+    manual.classList.add('hidden');
+    input.value = val;
+  } else {
+    manual.classList.add('hidden');
+    input.value = '';
   }
 }
 
