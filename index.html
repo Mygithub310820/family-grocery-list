@@ -7,13 +7,74 @@
   <link rel="stylesheet" href="style.css" />
 </head>
 <body>
-  <div class="app">
+
+  <!-- Экран выбора пользователя -->
+  <div id="login-screen" class="login-screen hidden">
+    <div class="login-card">
+      <div class="login-logo">🛒</div>
+      <h2 class="login-title">Кто идёт за покупками?</h2>
+      <div id="user-list" class="user-list"></div>
+      <button class="login-manage-btn" onclick="openManageUsers()">⚙️ Управление пользователями</button>
+    </div>
+  </div>
+
+  <!-- Модалка управления пользователями -->
+  <div id="manage-modal" class="modal-overlay hidden">
+    <div class="modal">
+      <div class="modal-header">
+        <h2>Пользователи</h2>
+        <button class="modal-close" onclick="closeManageUsers()">✕</button>
+      </div>
+      <div id="users-list-manage" class="users-list-manage"></div>
+      <div class="add-user-form">
+        <input type="text" id="new-user-name" placeholder="Имя" maxlength="20" />
+        <select id="new-user-emoji">
+          <option>👨</option><option>👩</option><option>👦</option>
+          <option>👧</option><option>👴</option><option>👵</option>
+        </select>
+        <select id="new-user-role">
+          <option value="user">Пользователь</option>
+          <option value="admin">Администратор</option>
+        </select>
+        <button class="add-user-btn" onclick="addUser()">Добавить</button>
+      </div>
+    </div>
+  </div>
+
+  <!-- Модалка редактирования продукта -->
+  <div id="edit-modal" class="modal-overlay hidden">
+    <div class="modal">
+      <div class="modal-header">
+        <h2>Редактировать</h2>
+        <button class="modal-close" onclick="closeEdit()">✕</button>
+      </div>
+      <div class="edit-form">
+        <input type="text" id="edit-name" placeholder="Название продукта" />
+        <select id="edit-category"></select>
+        <div class="edit-qty-row">
+          <input type="number" id="edit-qty" min="1" value="1" />
+          <select id="edit-unit"></select>
+        </div>
+        <button class="save-edit-btn" onclick="saveEdit()">Сохранить</button>
+      </div>
+    </div>
+  </div>
+
+  <!-- Основное приложение -->
+  <div class="app hidden">
     <header>
       <div class="header-content">
         <h1>🛒 Семейный список</h1>
-        <div class="stats">
-          <span id="stats-text">0 из 0 куплено</span>
+        <div class="header-right">
+          <button class="dark-toggle" onclick="toggleDark()" title="Сменить тему">🌙</button>
+          <div class="current-user-chip" onclick="logout()" title="Сменить пользователя">
+            <span id="current-user-display"></span>
+            <span class="logout-hint">↩</span>
+          </div>
         </div>
+      </div>
+      <div class="header-stats">
+        <span id="stats-text">0 из 0 куплено</span>
       </div>
       <div class="progress-bar">
         <div class="progress-fill" id="progress-fill"></div>
@@ -22,26 +83,15 @@
 
     <main>
       <div class="add-section">
-        <div class="add-form">
-          <input
-            type="text"
-            id="item-input"
-            placeholder="Добавить продукт..."
-            autocomplete="off"
-          />
-          <select id="category-select">
-            <option value="🥬 Овощи и фрукты">🥬 Овощи и фрукты</option>
-            <option value="🥩 Мясо и рыба">🥩 Мясо и рыба</option>
-            <option value="🥛 Молочное">🥛 Молочное</option>
-            <option value="🍞 Хлеб и выпечка">🍞 Хлеб и выпечка</option>
-            <option value="🧴 Бытовая химия">🧴 Бытовая химия</option>
-            <option value="🥫 Бакалея">🥫 Бакалея</option>
-            <option value="🍬 Сладости">🍬 Сладости</option>
-            <option value="🧃 Напитки">🧃 Напитки</option>
-            <option value="❓ Другое">❓ Другое</option>
-          </select>
+        <div class="input-wrap">
+          <input type="text" id="item-input" placeholder="Добавить продукт..." autocomplete="off" />
+          <div id="autocomplete-list" class="autocomplete-list hidden"></div>
+        </div>
+        <div class="add-row2">
+          <select id="category-select"></select>
           <input type="number" id="qty-input" placeholder="Кол-во" min="1" value="1" />
-          <button id="add-btn" onclick="addItem()">Добавить</button>
+          <select id="unit-select"></select>
+          <button id="add-btn" onclick="addItem()">+ Добавить</button>
         </div>
       </div>
 
@@ -53,7 +103,7 @@
 
       <div id="list-container"></div>
 
-      <div class="footer-actions">
+      <div class="footer-actions" id="footer-actions">
         <button class="danger-btn" onclick="clearDone()">Удалить купленные</button>
         <button class="danger-btn" onclick="clearAll()">Очистить всё</button>
       </div>
