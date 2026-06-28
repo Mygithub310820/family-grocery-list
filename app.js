@@ -66,7 +66,7 @@ let prices        = {};
 let itemHistory   = JSON.parse(localStorage.getItem('grocery-history') || '[]');
 let currentUserId = JSON.parse(localStorage.getItem('grocery-session') || 'null');
 let darkMode      = localStorage.getItem('grocery-dark') === 'true';
-let currentFilter = 'all';
+let currentFilter = 'active';
 let editingId     = null;
 let dragSrcId     = null;
 let selectedUserId = null;

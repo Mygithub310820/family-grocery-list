@@ -4,7 +4,7 @@
   <meta charset="UTF-8" />
   <meta name="viewport" content="width=device-width, initial-scale=1.0" />
   <title>Our Grocery</title>
-  <link rel="stylesheet" href="style.css?v=11" />
+  <link rel="stylesheet" href="style.css?v=12" />
 </head>
 <body>
 
@@ -140,7 +140,7 @@
           <div id="autocomplete-list" class="autocomplete-list hidden"></div>
         </div>
         <div class="add-row2">
-          <input type="number" id="qty-input" placeholder="Кол-во" min="1" value="1" onfocus="this.select()" />
+          <input type="number" id="qty-input" placeholder="Кол-во" min="1" value="1" onfocus="this.select()" onkeydown="if(event.key==='-')event.preventDefault()" />
           <select id="unit-select"></select>
           <button id="add-btn" onclick="addItem()">＋ Добавить</button>
         </div>
@@ -148,9 +148,9 @@
 
       <div class="filters-bar">
         <div class="filters">
-          <button class="filter-btn active" onclick="setFilter('all', this)">Все</button>
-          <button class="filter-btn" onclick="setFilter('active', this)">Не куплено</button>
+          <button class="filter-btn active" onclick="setFilter('active', this)">Не куплено</button>
           <button class="filter-btn" onclick="setFilter('done', this)">Куплено</button>
+          <button class="filter-btn" onclick="setFilter('all', this)">Все</button>
         </div>
         <button class="stats-open-btn" onclick="openStats()" title="Статистика">📊</button>
       </div>
@@ -166,6 +166,6 @@
 
   <script src="https://www.gstatic.com/firebasejs/9.23.0/firebase-app-compat.js"></script>
   <script src="https://www.gstatic.com/firebasejs/9.23.0/firebase-database-compat.js"></script>
-  <script src="app.js?v=11"></script>
+  <script src="app.js?v=12"></script>
 </body>
 </html>
