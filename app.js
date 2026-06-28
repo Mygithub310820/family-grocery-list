@@ -28,7 +28,7 @@ const UNITS = ['шт.', 'кг', 'г', 'л', 'мл', 'упак.', 'пач.'];
 
 // '---' — разделитель (пунктирная линия)
 const POPULAR = {
-  '🥬 ОВОЩИ И ФРУТКИ': ['Апельсины','Бананы','Капуста','Картофель','Лук','Морковь','Огурцы','Перец болгарский','Помидоры','Свекла','Чеснок','Яблоки'],
+  '🥬 ОВОЩИ И ФРУТКИ': ['Апельсины','Бананы','Капуста','Картофель','Лук','Морковь','Огули','Перец болгарский','Помидоры','Свекла','Чеснок','Яблоки'],
   '🥩 Мясо и рыба':    ['Баранина','Говядина','Жая','Қазы','Қарта','Колбаса','Креветки','Курица','Лосось','Субпродукты','Фарш'],
   '🥛 Молочное':       ['Масло сливочное','Сливки','Сметана','Соевый сомоком','Сомоком','Творог','Яйца','---','Burrata','Cheese Sveza','Halloumi','Stracciatella'],
   '🍞 Хлеб и выпечка': ['Багет','Батон','Булочки','Круассаны','Лаваш','Пита','Слойки','Тосты','Хеб белый','Хеб чёрный','Хлебцы'],
@@ -235,7 +235,6 @@ function updatePopular() {
 
   // Сброс
   document.getElementById('item-input').value  = '';
-  document.getElementById('price-input').value = '';
   document.getElementById('manual-wrap').classList.add('hidden');
   hideAutocomplete();
 }
@@ -254,13 +253,11 @@ function pickManual() {
   document.querySelector('.manual-btn').classList.add('selected');
   document.getElementById('manual-wrap').classList.remove('hidden');
   document.getElementById('item-input').value  = '';
-  document.getElementById('price-input').value = '';
   setTimeout(() => document.getElementById('item-input').focus(), 50);
 }
 
 function fillPrice(name) {
-  const p = prices[priceKey(name)];
-  document.getElementById('price-input').value = p ? p : '';
+  // price-input removed from add form; prices still tracked via purchase confirmation
 }
 
 // ── CRUD продуктов ─────────────────────────────────────────────────────────
@@ -282,15 +279,12 @@ function addItem() {
   const category = document.getElementById('category-select').value;
   const qty      = parseInt(document.getElementById('qty-input').value) || 1;
   const unit     = document.getElementById('unit-select').value;
-  const priceVal = parseFloat(document.getElementById('price-input').value) || null;
   const glass    = document.getElementById('glass-check')?.checked || false;
   const id       = Date.now();
 
-  if (priceVal) pricesRef.child(priceKey(finalName)).set(priceVal);
-
   dbRef.child(String(id)).set({
     id, name: finalName, category, qty, unit,
-    price: priceVal, glass: glass || false,
+    price: null, glass: glass || false,
     done: false, addedBy: currentUserId, order: items.length,
   });
 
@@ -303,7 +297,6 @@ function addItem() {
   // Сброс формы
   nameInput.value = '';
   document.getElementById('qty-input').value    = '1';
-  document.getElementById('price-input').value  = '';
   document.querySelectorAll('.popular-btn').forEach(b => b.classList.remove('selected'));
   document.getElementById('manual-wrap').classList.add('hidden');
   hideAutocomplete();

@@ -389,7 +389,7 @@ main {
 
 .add-row2 {
   display: grid;
-  grid-template-columns: 58px 72px 80px 1fr;
+  grid-template-columns: 72px 96px 1fr;
   gap: 8px;
 }
 
@@ -882,6 +882,6 @@ body.dark .cat-grey   { background: rgba(158,158,158,.15); color: #bdbdbd; }
 /* ── Мобильные ─────────────────────────────────────────────────────── */
 @media (max-width: 520px) {
   h1 { font-size: 1.2rem; }
-  .add-row2 { grid-template-columns: 50px 65px 70px 1fr; }
+  .add-row2 { grid-template-columns: 65px 88px 1fr; }
   .drag-handle { display: none; }
 }
