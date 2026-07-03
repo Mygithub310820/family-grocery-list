@@ -78,18 +78,23 @@ let dbRef, historyRef, pricesRef;
 // ── Firebase ───────────────────────────────────────────────────────────────
 function initFirebase() {
   firebase.initializeApp(FIREBASE_CONFIG);
-  dbRef      = firebase.database().ref('items');
-  historyRef = firebase.database().ref('history');
-  pricesRef  = firebase.database().ref('prices');
+  firebase.auth().signInAnonymously().then(() => {
+    dbRef      = firebase.database().ref('items');
+    historyRef = firebase.database().ref('history');
+    pricesRef  = firebase.database().ref('prices');
 
-  dbRef.on('value', snapshot => {
-    const data = snapshot.val();
-    items = data ? Object.values(data) : [];
-    items.sort((a, b) => (a.order || 0) - (b.order || 0));
-    render();
+    dbRef.on('value', snapshot => {
+      const data = snapshot.val();
+      items = data ? Object.values(data) : [];
+      items.sort((a, b) => (a.order || 0) - (b.order || 0));
+      render();
+    });
+    historyRef.on('value', snapshot => { historyData = snapshot.val() || {}; });
+    pricesRef.on('value',  snapshot => { prices      = snapshot.val() || {}; });
+  }).catch(err => {
+    console.error('Firebase auth failed:', err);
+    alert('Не удалось подключиться к серверу. Проверьте интернет-соединение.');
   });
-  historyRef.on('value', snapshot => { historyData = snapshot.val() || {}; });
-  pricesRef.on('value',  snapshot => { prices      = snapshot.val() || {}; });
 }
 
 function priceKey(name) {
