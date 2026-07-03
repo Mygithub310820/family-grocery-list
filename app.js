@@ -227,9 +227,11 @@ function updatePopular() {
   const popular = POPULAR[cat] || [];
   const container = document.getElementById('popular-items');
 
+  let afterSeparator = false;
   container.innerHTML = popular.map(p => {
-    if (p === '---') return '<div class="popular-separator"></div>';
-    return `<button class="popular-btn" data-name="${esc(p)}" onclick="pickPopularBtn(this)">${esc(p)}</button>`;
+    if (p === '---') { afterSeparator = true; return '<div class="popular-separator"></div>'; }
+    const cls = afterSeparator ? 'popular-btn cheese-btn' : 'popular-btn';
+    return `<button class="${cls}" data-name="${esc(p)}" onclick="pickPopularBtn(this)">${esc(p)}</button>`;
   }).join('')
   + `<button class="popular-btn manual-btn" onclick="pickManual()">✏️ Вручную</button>`;
 

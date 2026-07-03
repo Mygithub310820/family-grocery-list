@@ -462,8 +462,20 @@ input.error {
 .popular-separator {
   width: 100%;
   border: none;
-  border-top: 1.5px dashed var(--border);
-  margin: 2px 0;
+  border-top: 2.5px solid var(--muted);
+  margin: 4px 0;
+}
+
+.cheese-btn {
+  background: rgba(240, 180, 41, 0.18);
+  border-color: rgba(200, 145, 20, 0.55);
+  color: #8a6d1d;
+}
+.cheese-btn:hover { border-color: #c89114; color: #8a6d1d; }
+body.dark .cheese-btn {
+  background: rgba(255, 193, 7, 0.18);
+  border-color: rgba(255, 193, 7, 0.4);
+  color: #ffcc80;
 }
 
 /* Чекбокс Стекло */
