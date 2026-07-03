@@ -462,8 +462,8 @@ input.error {
 .popular-separator {
   width: 100%;
   border: none;
-  border-top: 2.5px solid var(--muted);
-  margin: 4px 0;
+  border-top: 1.5px dashed #b8860b;
+  margin: 2px 0;
 }
 
 .cheese-btn {

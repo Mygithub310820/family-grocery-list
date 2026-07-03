@@ -247,7 +247,12 @@ function updatePopular() {
 }
 
 function pickPopularBtn(btn) {
+  const wasSelected = btn.classList.contains('selected');
   document.querySelectorAll('.popular-btn').forEach(b => b.classList.remove('selected'));
+  if (wasSelected) {
+    document.getElementById('item-input').value = '';
+    return;
+  }
   btn.classList.add('selected');
   const name = btn.dataset.name;
   document.getElementById('item-input').value = name;
