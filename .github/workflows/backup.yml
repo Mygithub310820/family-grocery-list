@@ -1,0 +1,32 @@
+name: Firebase Backup
+
+on:
+  schedule:
+    - cron: '0 3 * * *'  # daily at 03:00 UTC
+  workflow_dispatch: {}
+
+permissions:
+  contents: write
+
+jobs:
+  backup:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+
+      - name: Export Firebase data
+        run: |
+          ID_TOKEN=$(curl -s -X POST \
+            "https://identitytoolkit.googleapis.com/v1/accounts:signUp?key=AIzaSyA2nd4cEt_jEDCzmLxkbK4ahm1KDNEQeeA" \
+            -H "Content-Type: application/json" -d '{"returnSecureToken":true}' | jq -r '.idToken')
+          mkdir -p backups
+          curl -sf "https://family-grocery-2fd4f-default-rtdb.europe-west1.firebasedatabase.app/.json?auth=$ID_TOKEN" \
+            -o backups/latest.json
+
+      - name: Commit backup if changed
+        run: |
+          git config user.name "github-actions[bot]"
+          git config user.email "github-actions[bot]@users.noreply.github.com"
+          git add backups/latest.json
+          git diff --staged --quiet || git commit -m "Automated backup $(date -u +%Y-%m-%d)"
+          git push
