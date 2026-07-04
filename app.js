@@ -33,7 +33,7 @@ const POPULAR = {
   '🥛 Молочное':       ['🇬🇷 Йогурт','Масло сливочное','Сливки','Сметана','Соевый сомоком','Сомоком','Творог','Яйца','---','Burrata','Cheese Sveza','Halloumi','Stracciatella','Svalya'],
   '🍞 Хлеб и выпечка': ['Багет','Батон','Булочки','Круассаны','Лаваш','Пита','Слойки','Тосты','Хеб белый','Хеб чёрный','Хлебцы'],
   '🧴 Бытовая химия':  ['Гель для душа','Губки для посуды','Зубная паста','Кондиционер для белья','Мыло','Освежитель воздуха','Порошок стиральный','Салфетки','Средство для посуды','Туалетная бумага','Шампунь'],
-  '🥫 Бакалея':        ['Булгур','Бурый Ись','Геркулес','Гречка','Ись','Киноа','Макароны','Мука','Оливковое масло','Подсолнечное масло','Соль','Сахар','Чечевица красная','Чечевица коричневая'],
+  '🥫 Бакалея':        ['Булгур','Бурый Ись','Геркулес','Гречка','Ись','Киноа','Макароны','Масло авокадо','Масло оливковое','Масло подсолнечное','Мука','Соль','Сахар','Чечевица красная','Чечевица коричневая'],
   '🍬 Сладости':       ['Вафли','Зефир','Карамель','Конфеты','Мармелад','Пастила','Печенье','Пряники','Торт','Халва','Шоколад'],
   '🧃 Напитки':        ['Боржоми','Вода без газиков','Вода с газиками','Какао','Квас','Кофе','Компот','Лимонад','Сарыағаш','Сок','Чай'],
   '❓ Другое':         [],
@@ -226,7 +226,6 @@ function updateUserDisplay() {
   const u = me();
   if (u) document.getElementById('current-user-display').textContent = `${u.emoji} ${u.name}`;
   document.querySelector('.dark-toggle').textContent = darkMode ? '☀️' : '🌙';
-  document.getElementById('footer-actions').style.display = isAdmin() ? 'flex' : 'none';
 }
 
 // ── Тёмная тема ────────────────────────────────────────────────────────────
@@ -415,22 +414,6 @@ function deleteItem(id) {
   if (item.done) historyRef.child(String(id)).remove();
 }
 
-function clearDone() {
-  if (!items.some(i => i.done)) return;
-  if (!confirm('Удалить купленные из списка?\n(История покупок сохранится)')) return;
-  const updates = {};
-  items.filter(i => i.done).forEach(i => { updates[String(i.id)] = null; });
-  dbRef.update(updates);
-  // История НЕ очищается
-}
-
-function clearAll() {
-  if (!items.length) return;
-  if (!confirm('Очистить весь список?\n(История покупок сохранится)')) return;
-  dbRef.set(null);
-  // История НЕ очищается
-}
-
 // ── Редактирование ─────────────────────────────────────────────────────────
 function openEdit(id) {
   const item = items.find(i => i.id === id);
@@ -547,13 +530,11 @@ function render() {
   const container = document.getElementById('list-container');
   if (!filtered.length) {
     const msgs = {
-      all:    { icon: '🛒', text: 'Список пуст — добавьте первый продукт!' },
       active: { icon: '✅', text: 'Все продукты куплены!' },
       done:   { icon: '📋', text: 'Ещё ничего не куплено' },
     };
     const m = msgs[currentFilter];
     container.innerHTML = `<div class="empty-state"><div class="icon">${m.icon}</div><p>${m.text}</p></div>`;
-    document.getElementById('footer-actions').style.display = isAdmin() ? 'flex' : 'none';
     return;
   }
 
@@ -584,7 +565,6 @@ function render() {
   }
 
   setupDragDrop();
-  document.getElementById('footer-actions').style.display = isAdmin() ? 'flex' : 'none';
 }
 
 function dayKey(ts) {

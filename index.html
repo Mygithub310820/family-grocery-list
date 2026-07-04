@@ -4,7 +4,7 @@
   <meta charset="UTF-8" />
   <meta name="viewport" content="width=device-width, initial-scale=1.0" />
   <title>Our Grocery</title>
-  <link rel="stylesheet" href="style.css?v=15" />
+  <link rel="stylesheet" href="style.css?v=16" />
 </head>
 <body>
 
@@ -150,23 +150,17 @@
         <div class="filters">
           <button class="filter-btn active" onclick="setFilter('active', this)">Не куплено</button>
           <button class="filter-btn" onclick="setFilter('done', this)">Куплено</button>
-          <button class="filter-btn" onclick="setFilter('all', this)">Все</button>
         </div>
         <button class="stats-open-btn" onclick="openStats()" title="Статистика">📊</button>
       </div>
 
       <div id="list-container"></div>
-
-      <div class="footer-actions" id="footer-actions">
-        <button class="danger-btn" onclick="clearDone()">Удалить купленные</button>
-        <button class="danger-btn" onclick="clearAll()">Очистить всё</button>
-      </div>
     </main>
   </div>
 
   <script src="https://www.gstatic.com/firebasejs/9.23.0/firebase-app-compat.js"></script>
   <script src="https://www.gstatic.com/firebasejs/9.23.0/firebase-auth-compat.js"></script>
   <script src="https://www.gstatic.com/firebasejs/9.23.0/firebase-database-compat.js"></script>
-  <script src="app.js?v=20"></script>
+  <script src="app.js?v=21"></script>
 </body>
 </html>
