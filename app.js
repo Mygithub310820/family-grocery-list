@@ -39,6 +39,22 @@ const POPULAR = {
   '❓ Другое':         [],
 };
 
+// Гликемический индекс (только для углеводных продуктов; для диапазонов — среднее значение)
+const GI = {
+  'Апельсины': 40, 'Бананы': 51, 'Баклажаны': 15, 'Капуста': 10, 'Картофель': 78,
+  'Лук': 10, 'Морковь': 35, 'Огули': 15, 'Перец болгарский': 15, 'Помидоры': 15,
+  'Свекла': 64, 'Яблоки': 36,
+  '🇬🇷 Йогурт': 12, 'Соевый сомоком': 34, 'Сомоком': 31,
+  'Багет': 95, 'Батон': 70, 'Булочки': 70, 'Круассаны': 67, 'Лаваш': 70,
+  'Пита': 57, 'Слойки': 59, 'Тосты': 70, 'Хеб белый': 75, 'Хеб чёрный': 50, 'Хлебцы': 65,
+  'Булгур': 48, 'Бурый Ись': 50, 'Геркулес': 55, 'Гречка': 50, 'Ись': 73,
+  'Киноа': 53, 'Макароны': 50, 'Мука': 70, 'Сахар': 65,
+  'Чечевица красная': 21, 'Чечевица коричневая': 30,
+  'Вафли': 76, 'Зефир': 65, 'Карамель': 65, 'Конфеты': 65, 'Мармелад': 70,
+  'Пастила': 65, 'Печенье': 55, 'Пряники': 65, 'Торт': 67, 'Халва': 35, 'Шоколад': 40,
+  'Какао': 40, 'Квас': 45, 'Компот': 50, 'Лимонад': 63, 'Сок': 40,
+};
+
 // ── Нормализация старых названий категорий ─────────────────────────────────
 const CAT_ALIASES = {
   '🥬 Овощи и фрукты':  '🥬 ОВОЩИ И ФРУТКИ',
@@ -230,8 +246,9 @@ function updatePopular() {
   let afterSeparator = false;
   container.innerHTML = popular.map(p => {
     if (p === '---') { afterSeparator = true; return '<div class="popular-separator"></div>'; }
-    const cls = afterSeparator ? 'popular-btn cheese-btn' : 'popular-btn';
-    return `<button class="${cls}" data-name="${esc(p)}" onclick="pickPopularBtn(this)">${esc(p)}</button>`;
+    const cls   = afterSeparator ? 'popular-btn cheese-btn' : 'popular-btn';
+    const label = GI[p] ? `${p}(${GI[p]})` : p;
+    return `<button class="${cls}" data-name="${esc(p)}" onclick="pickPopularBtn(this)">${esc(label)}</button>`;
   }).join('')
   + `<button class="popular-btn manual-btn" onclick="pickManual()">✏️ Вручную</button>`;
 
@@ -540,14 +557,62 @@ function render() {
     return;
   }
 
+  if (currentFilter === 'active') {
+    container.innerHTML = renderCategoryGroups(filtered);
+  } else {
+    const dayGroups = {};
+    filtered.forEach(item => {
+      const ts  = item.done ? (historyData[item.id] && historyData[item.id].completedAt) : null;
+      const key = ts ? dayKey(ts) : 'nodate';
+      if (!dayGroups[key]) dayGroups[key] = { ts, items: [] };
+      dayGroups[key].items.push(item);
+    });
+    const sortedKeys = Object.keys(dayGroups).sort((a, b) => {
+      if (a === 'nodate') return -1;
+      if (b === 'nodate') return 1;
+      return dayGroups[b].ts - dayGroups[a].ts;
+    });
+    container.innerHTML = sortedKeys.map(key => {
+      const grp   = dayGroups[key];
+      const label = key === 'nodate' ? 'Ещё не куплено' : dayLabel(grp.ts);
+      return `
+        <div class="day-group">
+          <div class="day-header">${label}</div>
+          ${renderCategoryGroups(grp.items)}
+        </div>`;
+    }).join('');
+  }
+
+  setupDragDrop();
+  document.getElementById('footer-actions').style.display = isAdmin() ? 'flex' : 'none';
+}
+
+function dayKey(ts) {
+  const d = new Date(ts);
+  return `${d.getFullYear()}-${d.getMonth()}-${d.getDate()}`;
+}
+
+function dayLabel(ts) {
+  const d       = new Date(ts);
+  const today   = new Date();
+  const startOf = date => new Date(date.getFullYear(), date.getMonth(), date.getDate()).getTime();
+  const diffDays = Math.round((startOf(today) - startOf(d)) / 86400000);
+  if (diffDays === 0) return 'Сегодня';
+  if (diffDays === 1) return 'Вчера';
+  const opts = { day: 'numeric', month: 'long' };
+  if (d.getFullYear() !== today.getFullYear()) opts.year = 'numeric';
+  return d.toLocaleDateString('ru', opts);
+}
+
+function renderCategoryGroups(itemList) {
   const groups = {};
-  filtered.forEach(item => {
+  itemList.forEach(item => {
     const cat = normCat(item.category);
     if (!groups[cat]) groups[cat] = [];
     groups[cat].push(item);
   });
 
-  container.innerHTML = Object.entries(groups).map(([cat, catItems]) => {
+  return Object.entries(groups).map(([cat, catItems]) => {
     const m       = cat.match(/^(\S+)\s(.+)$/);
     const emoji   = m ? m[1] : '📦';
     const catName = m ? m[2] : cat;
@@ -585,9 +650,6 @@ function render() {
       }).join('')}
     </div>
   `;}).join('');
-
-  setupDragDrop();
-  document.getElementById('footer-actions').style.display = isAdmin() ? 'flex' : 'none';
 }
 
 // ── Статистика ─────────────────────────────────────────────────────────────

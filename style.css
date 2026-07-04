@@ -577,6 +577,14 @@ body.dark .cheese-btn {
   gap: 12px;
 }
 
+.day-group { margin-bottom: 14px; }
+.day-header {
+  font-size: 0.95rem;
+  font-weight: 700;
+  color: var(--primary);
+  padding: 4px 4px 8px;
+}
+
 .category-group {
   background: var(--card);
   border-radius: var(--radius);
