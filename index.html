@@ -4,7 +4,7 @@
   <meta charset="UTF-8" />
   <meta name="viewport" content="width=device-width, initial-scale=1.0" />
   <title>Our Grocery</title>
-  <link rel="stylesheet" href="style.css?v=18" />
+  <link rel="stylesheet" href="style.css?v=19" />
 </head>
 <body>
 
@@ -100,6 +100,35 @@
     </div>
   </div>
 
+  <!-- Модалка справочников -->
+  <div id="reference-modal" class="modal-overlay hidden">
+    <div class="modal">
+      <div class="modal-header">
+        <h2>📖 Справочники</h2>
+        <button class="modal-close" onclick="closeReference()">✕</button>
+      </div>
+      <div class="reference-content">
+        <div class="ref-section">
+          <h3>Гликемический индекс (ГИ)</h3>
+          <div class="ref-scale">
+            <div class="ref-row"><span class="ref-swatch idx-low-bg"></span><span class="ref-label">Низкий</span><span class="ref-range">≤ 55</span></div>
+            <div class="ref-row"><span class="ref-swatch idx-medium-bg"></span><span class="ref-label">Средний</span><span class="ref-range">56–69</span></div>
+            <div class="ref-row"><span class="ref-swatch idx-high-bg"></span><span class="ref-label">Высокий</span><span class="ref-range">≥ 70</span></div>
+          </div>
+        </div>
+        <div class="ref-section">
+          <h3>Гликемическая нагрузка (ГН, на 100 г)</h3>
+          <div class="ref-scale">
+            <div class="ref-row"><span class="ref-swatch idx-low-bg"></span><span class="ref-label">Низкая</span><span class="ref-range">≤ 10</span></div>
+            <div class="ref-row"><span class="ref-swatch idx-medium-bg"></span><span class="ref-label">Средняя</span><span class="ref-range">11–19</span></div>
+            <div class="ref-row"><span class="ref-swatch idx-high-bg"></span><span class="ref-label">Высокая</span><span class="ref-range">≥ 20</span></div>
+          </div>
+        </div>
+        <p class="ref-note">Пример чипа: «Апельсины(40/4)» — первое число ГИ, второе ГН. Показаны только для углеводных продуктов.</p>
+      </div>
+    </div>
+  </div>
+
   <!-- Основное приложение -->
   <div class="app hidden">
     <header>
@@ -152,6 +181,7 @@
           <button class="filter-btn" onclick="setFilter('done', this)">Куплено</button>
         </div>
         <button class="stats-open-btn" onclick="openStats()" title="Статистика">📊</button>
+        <button class="stats-open-btn" onclick="openReference()" title="Справочники">📖</button>
       </div>
 
       <div id="list-container"></div>
@@ -161,6 +191,6 @@
   <script src="https://www.gstatic.com/firebasejs/9.23.0/firebase-app-compat.js"></script>
   <script src="https://www.gstatic.com/firebasejs/9.23.0/firebase-auth-compat.js"></script>
   <script src="https://www.gstatic.com/firebasejs/9.23.0/firebase-database-compat.js"></script>
-  <script src="app.js?v=24"></script>
+  <script src="app.js?v=25"></script>
 </body>
 </html>

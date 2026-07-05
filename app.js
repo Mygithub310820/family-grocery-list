@@ -665,6 +665,9 @@ function renderCategoryGroups(itemList) {
 function openStats()  { renderStats(); document.getElementById('stats-modal').classList.remove('hidden'); }
 function closeStats() { document.getElementById('stats-modal').classList.add('hidden'); }
 
+function openReference()  { document.getElementById('reference-modal').classList.remove('hidden'); }
+function closeReference() { document.getElementById('reference-modal').classList.add('hidden'); }
+
 function setStatsPeriod(period, btn) {
   statsPeriod = period;
   document.querySelectorAll('.period-btn').forEach(b => b.classList.remove('active'));
