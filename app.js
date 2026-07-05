@@ -55,6 +55,22 @@ const GI = {
   'Какао': 40, 'Квас': 45, 'Компот': 50, 'Лимонад': 63, 'Сок': 40,
 };
 
+// Гликемическая нагрузка на 100 г = ГИ × (доступные углеводы на 100 г) / 100
+const GL = {
+  'Апельсины': 4, 'Бананы': 10, 'Баклажаны': 0, 'Капуста': 0, 'Картофель': 12,
+  'Лук': 1, 'Морковь': 2, 'Огули': 0, 'Перец болгарский': 1, 'Помидоры': 0,
+  'Свекла': 5, 'Яблоки': 4,
+  '🇬🇷 Йогурт': 0, 'Соевый сомоком': 1, 'Сомоком': 1,
+  'Багет': 48, 'Батон': 34, 'Булочки': 35, 'Круассаны': 30, 'Лаваш': 34,
+  'Пита': 31, 'Слойки': 27, 'Тосты': 34, 'Хеб белый': 37, 'Хеб чёрный': 21, 'Хлебцы': 39,
+  'Булгур': 7, 'Бурый Ись': 11, 'Геркулес': 6, 'Гречка': 9, 'Ись': 20,
+  'Киноа': 10, 'Макароны': 14, 'Мука': 51, 'Перловка': 5, 'Сахар': 65,
+  'Чечевица красная': 3, 'Чечевица коричневая': 4,
+  'Вафли': 52, 'Зефир': 51, 'Карамель': 57, 'Конфеты': 49, 'Мармелад': 55,
+  'Пастила': 52, 'Печенье': 37, 'Пряники': 42, 'Торт': 34, 'Халва': 16, 'Шоколад': 22,
+  'Какао': 4, 'Квас': 2, 'Компот': 6, 'Лимонад': 7, 'Сок': 4,
+};
+
 // ── Нормализация старых названий категорий ─────────────────────────────────
 const CAT_ALIASES = {
   '🥬 Овощи и фрукты':  '🥬 ОВОЩИ И ФРУТКИ',
@@ -237,6 +253,12 @@ function toggleDark() {
 }
 
 // ── Популярные товары (кнопки-чипы) ───────────────────────────────────────
+function idxClass(val, lowMax, medMax) {
+  if (val <= lowMax) return 'idx-low';
+  if (val <= medMax) return 'idx-medium';
+  return 'idx-high';
+}
+
 function updatePopular() {
   const cat     = document.getElementById('category-select').value;
   const popular = POPULAR[cat] || [];
@@ -245,9 +267,16 @@ function updatePopular() {
   let afterSeparator = false;
   container.innerHTML = popular.map(p => {
     if (p === '---') { afterSeparator = true; return '<div class="popular-separator"></div>'; }
-    const cls   = afterSeparator ? 'popular-btn cheese-btn' : 'popular-btn';
-    const label = GI[p] ? `${p}(${GI[p]})` : p;
-    return `<button class="${cls}" data-name="${esc(p)}" onclick="pickPopularBtn(this)">${esc(label)}</button>`;
+    const cls  = afterSeparator ? 'popular-btn cheese-btn' : 'popular-btn';
+    const gi   = GI[p];
+    const gl   = GL[p];
+    let label  = esc(p);
+    if (gi !== undefined && gl !== undefined) {
+      const giCls = idxClass(gi, 55, 69);
+      const glCls = idxClass(gl, 10, 19);
+      label += `(<span class="${giCls}">${gi}</span>/<span class="${glCls}">${gl}</span>)`;
+    }
+    return `<button class="${cls}" data-name="${esc(p)}" onclick="pickPopularBtn(this)">${label}</button>`;
   }).join('')
   + `<button class="popular-btn manual-btn" onclick="pickManual()">✏️ Вручную</button>`;
 

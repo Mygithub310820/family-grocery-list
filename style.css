@@ -466,6 +466,13 @@ input.error {
   margin: 2px 0;
 }
 
+.idx-low    { color: #2e7d32; font-weight: 700; }
+.idx-medium { color: #b8860b; font-weight: 700; }
+.idx-high   { color: #c0392b; font-weight: 700; }
+body.dark .idx-low    { color: #66bb6a; }
+body.dark .idx-medium { color: #e0b040; }
+body.dark .idx-high   { color: #ff6b6b; }
+
 .cheese-btn {
   background: rgba(240, 180, 41, 0.18);
   border-color: rgba(200, 145, 20, 0.55);
