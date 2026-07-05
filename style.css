@@ -468,10 +468,10 @@ input.error {
 
 .idx-low    { color: #2e7d32; font-weight: 700; }
 .idx-medium { color: #b8860b; font-weight: 700; }
-.idx-high   { color: #c0392b; font-weight: 700; }
+.idx-high   { color: #e60000; font-weight: 700; }
 body.dark .idx-low    { color: #66bb6a; }
 body.dark .idx-medium { color: #e0b040; }
-body.dark .idx-high   { color: #ff6b6b; }
+body.dark .idx-high   { color: #ff2020; }
 
 .cheese-btn {
   background: rgba(240, 180, 41, 0.18);
