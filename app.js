@@ -668,7 +668,7 @@ function renderCategoryGroups(itemList) {
         const author   = USERS.find(u => u.id === item.addedBy);
         const cm       = canManage(item);
         const priceStr = item.price
-          ? `<span class="item-price">${(item.price * item.qty).toLocaleString('ru')} ₸</span>` : '';
+          ? `<span class="item-price">${Math.round(item.price * item.qty).toLocaleString('ru')} ₸</span>` : '';
         const glassStr = item.glass ? `<span class="item-glass" title="Стекло">🍶</span>` : '';
         return `
           <div class="item ${item.done ? 'done' : ''}" data-id="${item.id}" draggable="true">
@@ -812,7 +812,7 @@ function renderStats() {
 
   const totalCount = entries.length;
   const totalSpend = entries.reduce((s, h) => s + (h.price ? h.price * h.qty : 0), 0);
-  const fmt      = n => n > 0 ? `${n.toLocaleString('ru')} ₸` : '—';
+  const fmt      = n => n > 0 ? `${Math.round(n).toLocaleString('ru')} ₸` : '—';
   const useSpend = totalSpend > 0;
 
   // По заказчикам
