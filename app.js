@@ -497,9 +497,10 @@ function saveEdit() {
   if (!name) return;
   const priceVal = smartParseFloat(document.getElementById('edit-price').value) || null;
   if (priceVal) pricesRef.child(priceKey(name)).set(priceVal);
+  const qtyRaw = smartParseFloat(document.getElementById('edit-qty').value);
   dbRef.child(String(editingId)).update({
     name, category: document.getElementById('edit-category').value,
-    qty:  Math.round(smartParseFloat(document.getElementById('edit-qty').value)) || 1,
+    qty:  isNaN(qtyRaw) ? 1 : +qtyRaw.toFixed(1),
     unit: document.getElementById('edit-unit').value,
     price: priceVal,
   });
