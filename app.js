@@ -481,7 +481,7 @@ function openEdit(id) {
   document.getElementById('edit-category').value = item.category;
   document.getElementById('edit-qty').value      = item.qty;
   document.getElementById('edit-unit').value     = item.unit || 'шт.';
-  document.getElementById('edit-price').value    = item.price || '';
+  document.getElementById('edit-price').value    = item.price ? +(item.price * item.qty).toFixed(2) : '';
   document.getElementById('edit-modal').classList.remove('hidden');
   document.getElementById('edit-name').focus();
 }
@@ -493,16 +493,19 @@ function closeEdit() {
 
 function saveEdit() {
   if (!editingId) return;
-  const name     = document.getElementById('edit-name').value.trim();
+  const name       = document.getElementById('edit-name').value.trim();
   if (!name) return;
-  const priceVal = smartParseFloat(document.getElementById('edit-price').value) || null;
-  if (priceVal) pricesRef.child(priceKey(name)).set(priceVal);
-  const qtyRaw = smartParseFloat(document.getElementById('edit-qty').value);
+  const qtyRaw     = smartParseFloat(document.getElementById('edit-qty').value);
+  const qty        = isNaN(qtyRaw) ? 1 : +qtyRaw.toFixed(1);
+  // Поле "Цена ₸" — это итоговая стоимость за все количество; вычисляем цену за единицу
+  const totalVal   = smartParseFloat(document.getElementById('edit-price').value) || null;
+  const unitPrice  = (totalVal && qty) ? +(totalVal / qty).toFixed(2) : null;
+  if (unitPrice) pricesRef.child(priceKey(name)).set(unitPrice);
   dbRef.child(String(editingId)).update({
     name, category: document.getElementById('edit-category').value,
-    qty:  isNaN(qtyRaw) ? 1 : +qtyRaw.toFixed(1),
+    qty,
     unit: document.getElementById('edit-unit').value,
-    price: priceVal,
+    price: unitPrice,
   });
   closeEdit();
 }
