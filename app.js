@@ -133,6 +133,34 @@ function priceKey(name) {
   return name.trim().toLowerCase().replace(/[^a-zа-яё0-9]/gi, '_');
 }
 
+// Позволяет вводить "2+3" (или "2+3=") в полях количества/цены — складывает несколько партий одного товара
+function smartParseFloat(str) {
+  str = String(str || '').trim();
+  if (str.endsWith('=')) str = str.slice(0, -1).trim();
+  if (str.includes('+')) {
+    const parts = str.split('+').map(p => p.trim().replace(',', '.'));
+    const valid = parts.length > 0 && parts.every(p => /^-?\d+(\.\d+)?$/.test(p));
+    if (!valid) return NaN;
+    const sum = parts.reduce((s, p) => s + parseFloat(p), 0);
+    return Math.round(sum * 1000) / 1000;
+  }
+  return parseFloat(str.replace(',', '.'));
+}
+
+// Сразу показывает результат сложения в поле, когда пользователь нажимает "="
+function attachSumInput(id) {
+  const el = document.getElementById(id);
+  if (!el) return;
+  const convert = () => {
+    const sum = smartParseFloat(el.value);
+    if (!isNaN(sum) && String(el.value).includes('+')) el.value = sum;
+  };
+  el.addEventListener('keydown', e => {
+    if (e.key === '=') { e.preventDefault(); convert(); }
+  });
+  el.addEventListener('blur', convert);
+}
+
 function saveItems() {
   const obj = {};
   items.forEach((item, idx) => { item.order = idx; obj[item.id] = item; });
@@ -393,8 +421,8 @@ function skipPrice() {
 }
 
 function confirmPrice() {
-  const priceVal = parseFloat(document.getElementById('price-prompt-input').value) || null;
-  const qtyVal   = parseFloat(document.getElementById('price-prompt-qty').value)   || null;
+  const priceVal = smartParseFloat(document.getElementById('price-prompt-input').value) || null;
+  const qtyVal   = smartParseFloat(document.getElementById('price-prompt-qty').value)   || null;
   const unitVal  = document.getElementById('price-prompt-unit').value;
   document.getElementById('price-prompt').classList.add('hidden');
 
@@ -467,11 +495,11 @@ function saveEdit() {
   if (!editingId) return;
   const name     = document.getElementById('edit-name').value.trim();
   if (!name) return;
-  const priceVal = parseFloat(document.getElementById('edit-price').value) || null;
+  const priceVal = smartParseFloat(document.getElementById('edit-price').value) || null;
   if (priceVal) pricesRef.child(priceKey(name)).set(priceVal);
   dbRef.child(String(editingId)).update({
     name, category: document.getElementById('edit-category').value,
-    qty:  parseInt(document.getElementById('edit-qty').value) || 1,
+    qty:  Math.round(smartParseFloat(document.getElementById('edit-qty').value)) || 1,
     unit: document.getElementById('edit-unit').value,
     price: priceVal,
   });
@@ -910,6 +938,7 @@ document.getElementById('stats-modal').addEventListener('click', e => {
 document.getElementById('price-prompt').addEventListener('click', e => {
   if (e.target === document.getElementById('price-prompt')) skipPrice();
 });
+['price-prompt-qty', 'price-prompt-input', 'edit-qty', 'edit-price'].forEach(attachSumInput);
 
 // ── Старт ──────────────────────────────────────────────────────────────────
 init();

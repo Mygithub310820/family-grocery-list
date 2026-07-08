@@ -534,7 +534,7 @@ body.dark .cheese-btn {
   margin-bottom: 10px;
 }
 .pp-label { font-size: 0.82rem; color: var(--muted); white-space: nowrap; width: 80px; flex-shrink: 0; }
-.price-prompt-row input[type="number"] { width: 75px; flex-shrink: 0; }
+.price-prompt-row input[type="text"] { width: 75px; flex-shrink: 0; }
 .price-prompt-row select { flex: 1; }
 .price-prompt-btns { display: grid; grid-template-columns: 1fr 1fr; gap: 10px; margin-top: 4px; }
 

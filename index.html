@@ -4,7 +4,7 @@
   <meta charset="UTF-8" />
   <meta name="viewport" content="width=device-width, initial-scale=1.0" />
   <title>Our Grocery</title>
-  <link rel="stylesheet" href="style.css?v=19" />
+  <link rel="stylesheet" href="style.css?v=20" />
 </head>
 <body>
 
@@ -46,9 +46,9 @@
         <input type="text" id="edit-name" placeholder="Название продукта" />
         <select id="edit-category"></select>
         <div class="edit-qty-row">
-          <input type="number" id="edit-qty" min="1" value="1" onfocus="this.select()" />
+          <input type="text" id="edit-qty" value="1" onfocus="this.select()" />
           <select id="edit-unit"></select>
-          <input type="number" id="edit-price" placeholder="Цена ₸" min="0" step="1" onfocus="this.select()" />
+          <input type="text" id="edit-price" placeholder="Цена ₸" onfocus="this.select()" />
         </div>
         <button class="save-edit-btn" onclick="saveEdit()">Сохранить</button>
       </div>
@@ -62,12 +62,12 @@
       <div class="price-prompt-item" id="price-prompt-name"></div>
       <div class="price-prompt-row">
         <label class="pp-label">Количество:</label>
-        <input type="number" id="price-prompt-qty" min="0.001" step="any" onfocus="this.select()" />
+        <input type="text" id="price-prompt-qty" onfocus="this.select()" />
         <select id="price-prompt-unit"></select>
       </div>
       <div class="price-prompt-row">
         <label class="pp-label">Итого, ₸:</label>
-        <input type="number" id="price-prompt-input" placeholder="необязательно" min="0" step="1" onfocus="this.select()" style="flex:1" />
+        <input type="text" id="price-prompt-input" placeholder="необязательно" onfocus="this.select()" style="flex:1" />
       </div>
       <div class="price-prompt-btns">
         <button class="back-btn" onclick="skipPrice()">Пропустить</button>
@@ -191,6 +191,6 @@
   <script src="https://www.gstatic.com/firebasejs/9.23.0/firebase-app-compat.js"></script>
   <script src="https://www.gstatic.com/firebasejs/9.23.0/firebase-auth-compat.js"></script>
   <script src="https://www.gstatic.com/firebasejs/9.23.0/firebase-database-compat.js"></script>
-  <script src="app.js?v=25"></script>
+  <script src="app.js?v=26"></script>
 </body>
 </html>
